@@ -37,6 +37,26 @@ chem1 <- mydat[,c(8:21,23:40)] # pull out element data (excluing Ni)
 chem1[chem1==0] <- NA # set 0 values to NA
 chem.imp <- complete(mice(chem1,method='rf')) # impute missing data using the random forest approach
 chem.t <- log10(chem.imp) # log-base-10 transform raw element data
+grps <- unique(attr1$CORE)
 
 # run script and view output as "kable"
-kable(group.mem.probs(chem.t,attr1$CORE,unique(attr1$CORE)))
+kable(group.mem.probs(chem.t,attr1$CORE,grps))
+
+
+## Parallel processing version below, in progress
+
+library(foreach)
+library(doParallel)
+cl <- makeCluster(detectCores())
+registerDoParallel(cl)
+
+probs <- list()
+for (m in 1:length(grps)) {
+probs[[m]] <-     cbind(foreach(i=1:nrow(chem.t[which(attr1$CORE==grps[m]),]),.combine='c',.packages='ICSNP') %dopar% (round((HotellingsT2(chem.t[which(attr1$CORE==grps[m]),][i,],chem.t[which(attr1$CORE==grps[m]),][-i,])$p.value),5)*100),
+                    foreach(j=1:length(grps[-m]),.combine=cbind,.packages='foreach') %:% foreach(i=1:nrow(x),.combine='c',.packages='ICSNP') 
+                    %dopar% (HotellingsT2(x[i,],chem.t[which(attr1$CORE==grps[-m][j]),])$p.value) )
+probs[[m]] <- probs[[m]][]
+colnames(probs[[m]]) <- grps
+row.names(probs[[m]]) <- row.names(x)
+}
+proc.time()-ptm
