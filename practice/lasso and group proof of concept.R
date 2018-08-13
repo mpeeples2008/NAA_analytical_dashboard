@@ -27,12 +27,12 @@ server <- function(input, output){
   
   output$plot <- renderPlotly({
     req(data())
-    p<-ggplot(data = data()$data, mapping = aes(x = age, y = wage)) + 
-      geom_point() + theme_bw() 
+    p < -ggplot(data = data()$data, mapping = aes(x = age, y = wage)) + 
+         geom_point() + theme_bw() 
     
-    obj<-data()$sel
+    obj <- data()$sel
     if(nrow(obj)!=0) {
-      p<-p + geom_point(data=obj,color="red",size=4)
+      p < -p + geom_point(data=obj,color="red",size=4)
     }
     
     ggplotly(p,source="master")
@@ -55,10 +55,10 @@ server <- function(input, output){
 })
   
   #reactive data
-  data<-reactive({
-    tmp<-Wage 
+  data <- reactive({
+    tmp <- Wage 
     
-    sel<-tryCatch(Wage[(selected()$pointNumber+1),,drop=FALSE] , error=function(e){NULL})
+    sel <- tryCatch(Wage[(selected()$pointNumber+1),,drop=FALSE] , error=function(e){NULL})
     
     list(data=tmp,sel=sel)
     
