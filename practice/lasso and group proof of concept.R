@@ -49,8 +49,7 @@ server <- function(input, output){
   })
   
   output$hot <- renderRHandsontable({
-    rhandsontable(data()$sel
-   )
+    rhandsontable(data()$sel)
 })
   
   #reactive data
