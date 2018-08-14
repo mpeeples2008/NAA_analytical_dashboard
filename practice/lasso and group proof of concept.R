@@ -16,7 +16,7 @@ ui <- fluidPage(
   theme = shinytheme("spacelab"),
   fluidRow(
     column(12, plotlyOutput("plot", height = "600px")),
-    column(12,rHandsontableOutput("hot"))
+    column(12, rHandsontableOutput("hot"))
     # column(12, verbatimTextOutput("text"))
   )
 )
@@ -26,12 +26,12 @@ server <- function(input, output){
   
   output$plot <- renderPlotly({
     req(data())
-    p < -ggplot(data = data()$data, mapping = aes(x = age, y = wage)) + 
+    p <- ggplot(data = data()$data, mapping = aes(x = age, y = wage)) + 
          geom_point() + theme_bw() 
     
     obj <- data()$sel
     if(nrow(obj)!=0) {
-      p < -p + geom_point(data=obj,color="red",size=4)
+      p <- p + geom_point(data=obj,color="red",size=4)
     }
     
     ggplotly(p,source="master")
