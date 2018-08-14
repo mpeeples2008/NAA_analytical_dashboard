@@ -1,5 +1,5 @@
 ## Forked in part from https://gist.github.com/dgrapov/128e3be71965bf00495768e47f0428b9
-# plotly box or lasso select linked to rhandsontable
+## plotly box or lasso select linked to rhandsontable
 
 library(ggplot2)
 library(plotly)
