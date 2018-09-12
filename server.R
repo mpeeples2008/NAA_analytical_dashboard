@@ -184,7 +184,7 @@ shinyServer(
       # Render Element Histogram plot UI
       output$element.hist <- renderPlot({
         if (length(chem.t[input$hist.el]) == 0) return(NULL)
-        ggplot(data = chem.t, aes(x = chem.t[input$hist.el])) + 
+        ggplot(data = chem.t, aes_string(x = input$hist.el)) + 
           geom_histogram(fill = "blue", alpha = 0.5, bins = input$hist.bin) + 
           labs(x = input$hist.el, y = " ")  
       })
