@@ -1,6 +1,7 @@
 # UI elements for Impute - Transform Tab
 
-tabPanel(title = "Impute and Transform", icon = icon("transfer", lib= "glyphicon"), id = "imputetransform",
+tabPanel(title = "Impute & Transform", icon = icon("transfer", lib= "glyphicon"), id = "imputetransform",
+         
          sidebarLayout(
            sidebarPanel(
              uiOutput("impute.options"),
