@@ -4,40 +4,44 @@
 shinyServer(
   function(input, output, session) {
       
-      #### Data Input Chunk
-      # reactive input for file data
+  #### Data Input Chunk ####
+  ##########################
+    
+      # Reactive input for file data
       filedata <- reactive({
         infile <- input$file1
         if (is.null(infile)) return(NULL)
-        read.csv(infile$datapath,row.names=1,header=TRUE) # read in datafile with default options
+        read.csv(infile$datapath, row.names=1, header=TRUE) # read in datafile with default options
       })
       
-      # render multi-select lookup for choosing attribute columns
+      # Render multi-select lookup for choosing attribute columns
       output$attr <- renderUI({
         df <- filedata()
         if (is.null(df)) return(NULL)
-        # remove numeric columns from default selection
+        # Remove numeric columns from default selection
         nums1 <- unlist(lapply(df, is.numeric)) 
-        items=names(df[,!nums1])
-        # set names as all columns in datatable
+        items = names(df[,!nums1])
+        # Set names as all columns in datatable
         items.all <- names(df)
-        names(items.all)=items.all
-        names(items)=items
-        selectInput("attr","Select all of the attribute variables you want to display:",items.all,multiple=TRUE,selected=items)
+        names(items.all) = items.all
+        names(items) = items
+        selectInput("attr","Select all of the attribute variables you want to display:",
+                    items.all, multiple = TRUE, selected = items)
       })
       
-      # render multi-select lookup for choosing chemical concentration columns
+      # Render multi-select lookup for choosing chemical concentration columns
       output$chem <- renderUI({
         df <- filedata()
         if (is.null(df)) return(NULL)
-        # include only numeric columns in default selection
+        # Onclude only numeric columns in default selection
         nums <- unlist(lapply(df, is.numeric)) 
         items=names(df[,nums])
-        # set names as all columns in datatable
+        # Set names as all columns in datatable
         items.all <- names(df)
-        names(items)=items
-        names(items.all)=items.all
-        selectInput("chem","Select all of the element concentrations:",items.all,multiple=TRUE,selected=items)
+        names(items) = items
+        names(items.all) = items.all
+        selectInput("chem", "Select all of the element concentrations:",
+                    items.all, multiple = TRUE, selected = items)
       })
       
       # Render datatable of chemical data based on selected variables, save to global environment
@@ -68,6 +72,10 @@ shinyServer(
         actionButton("action", "Press after reading file and selecting variables")
       })
       
+    
+  ####  Impute & Transform  ####
+  ##############################
+      
       # Render button and controls to Impute data
       output$ui.impute <- renderUI({
         if (is.null(input$file1)) return()
@@ -87,11 +95,14 @@ shinyServer(
         })   
       })
       
-      # render options for data imputation
+      # Render options for data imputation
       output$impute.options <- renderUI({
         df <- filedata()
         radioButtons("impute.method", label=("Select Imputation Method"), 
-                     choices=list("None" = "none", "Random Forest" = "rf", "Predictive Mean Matching" = "pmm", "Weighted Predictive Mean Matching" = "midastouch"),
+                     choices=list("None" = "none", 
+                                  "Random Forest" = "rf", 
+                                  "Predictive Mean Matching" = "pmm", 
+                                  "Weighted Predictive Mean Matching" = "midastouch"),
                      selected = "none")
       })
       
@@ -101,12 +112,15 @@ shinyServer(
         actionButton("transform", "Transform data")
       })
       
-      # render options for data imputation
+      # Render options for data imputation
       output$transform.options <- renderUI({
         df <- filedata()
         if (is.null(df)) return()
         radioButtons("transform.method", label=("Select Transformation"), 
-                     choices=list("None" = "none", "Log-10" = "log10", "Natural Log" = "log", "Percent/Z-score" = "z.score"),
+                     choices=list("None" = "none", 
+                                  "Log-10" = "log10", 
+                                  "Natural Log" = "log", 
+                                  "Percent/Z-score" = "z.score"),
                      selected = "none")
       })
       
@@ -114,25 +128,25 @@ shinyServer(
       output$transform.contents <- DT::renderDataTable({
         input$transform
         isolate({
-          if (input$transform.method=='none') {
+          if (input$transform.method == 'none') {
             chem.t <<- chem.imp
-            return(round(chem.t,3))}
-          else {if (input$transform.method=='log10') {
+            return(round(chem.t, 3))}
+          else {if (input$transform.method == 'log10') {
             chem.t <<- log10(chem.imp)
-            return(round(chem.t,3))}
-            else {if (input$transform.method=='log') {
+            return(round(chem.t, 3))}
+            else {if (input$transform.method == 'log') {
               chem.t <<- log(chem.imp)
-              return(round(chem.t,3))}
-              else if (input$transform.method=='z.score') {
-                chem.t <<- as.data.frame(scale(prop.table(as.matrix(chem.imp),1)*100))
-                return(round(chem.t,3))}}}
+              return(round(chem.t, 3))}
+              else if (input$transform.method == 'z.score') {
+                chem.t <<- as.data.frame(scale(prop.table(as.matrix(chem.imp), 1) * 100))
+                return(round(chem.t, 3))}}}
         })   
       })
       
       # Render missing data plot
       output$miss.plot <- renderPlot({
         input$action
-        if (length(input$action)==0) return(NULL)
+        if (length(input$action) == 0) return(NULL)
         isolate({
           plot_missing(chem1)
         })
@@ -150,7 +164,7 @@ shinyServer(
       output$ui.hist.bin <- renderUI({
         if (is.null(input$file1)) return()
         isolate({
-          sliderInput("hist.bin","Number of Bins",min=2,max=100,value=30,step=1)
+          sliderInput("hist.bin","Number of Bins",min=2, max=100, value=30, step=1)
         })
       })
       
@@ -169,17 +183,88 @@ shinyServer(
       
       # Render Element Histogram plot UI
       output$element.hist <- renderPlot({
-        if (length(chem.t[input$hist.el])==0) return(NULL)
-        ggplot(data=chem.t, aes(x=chem.t[input$hist.el])) + 
-          geom_histogram(fill="blue", alpha = 0.5, bins=input$hist.bin) + 
-          labs(x=input$hist.el, y=" ")  
+        if (length(chem.t[input$hist.el]) == 0) return(NULL)
+        ggplot(data = chem.t, aes(x = chem.t[input$hist.el])) + 
+          geom_histogram(fill = "blue", alpha = 0.5, bins = input$hist.bin) + 
+          labs(x = input$hist.el, y = " ")  
       })
       
-      # render multi-select lookup for choosing chemical concentration columns to include in Principal Components Analysis
+      
+  ####   Cluster  ####
+  ####################
+      
+      # Render button to run clustering algorithm 
+      output$ui.cluster <- renderUI({
+        if (is.null(input$file1)) return()
+        actionButton("cluster", "Run clustering algorithm")
+      })
+      
+      # Render UI options for cluster analysis
+      output$cluster.options <- renderUI({
+        df <- filedata()
+        radioButtons("cluster.method", label = ("Select Clustering Method"), 
+                     choices=list("None" = "none", 
+                                  "Hierarchical Clustering" = "hca", 
+                                  "Hierarchical Divisive Clustering" = "hdca", 
+                                  "k-means" = "kmean",
+                                  "k-mediods" = "kmed"),
+                     selected = "none")
+      })
+      
+      # Render distance options for dendrogram plot
+      output$dist.options <- renderUI({
+        df <- filedata()
+        radioButtons("dist.method", label = ("Select Hierarchical Distance Method"), 
+                     choices=list("None" = "none", 
+                                  "Euclidean" = "euclidean", 
+                                  "Manhattan" = "manhattan", 
+                                  "Minkowski" = "minkowski",
+                                  "Maximum" = "maximum"),
+                     selected = "none")
+      })
+        
+        # Render hierarchical clustering options for dendrogram plot
+        output$hclust.options <- renderUI({
+          df <- filedata()
+          radioButtons("hclust.method", label = ("Select Hierarchical Clustering Method"), 
+                       choices=list("None" = "none", 
+                                    "Average-Linkage" = "average", 
+                                    "Complete Linkage" = "complete", 
+                                    "Ward's" = "ward.D", 
+                                    "Ward's squared" = "ward.D2"),
+                       selected = "none")
+        })
+        
+        # Create distance objects based on hierarchical clustering using Euclidean distance
+        #  edistclust_com <- hclust(dist(df_for_dist))
+        
+        # Render Element Dendrogram plot 
+        output$element.dend <- renderPlot({
+          if (length(chem.t[input$hist.el]) == 0) return(NULL)
+          plot(hclust(dist(chem.t, method = input$dist.method), method = input$hclust.method), 
+               xlab = paste0(input$dist.method, " distance;", input$clust.method, " clustering"))
+          
+        })
+        
+        # Create dendrogram object
+      #  dend_df_com <- as.dendrogram(edistclust_com)
+        
+        # Plot dendogram object to look for good cut-off heights - 2.5 seems to be a good height
+      #  plot(dend_df_com, nodePar = list(lab.cex = 0.15, pch = NA))
+        
+      
+      
+      
+  ####   Ordination   ####
+  ########################
+      
+      # Render multi-select lookup for choosing chemical concentration columns to include in 
+      # Principal Components Analysis
       output$chem.pca <- renderUI({
         items.all <- names(chem.t)
         names(items.all)=items.all
-        selectInput("chem.pca.sel","Select transformed elements to include in PCA:",items.all,multiple=TRUE,selected=items.all)
+        selectInput("chem.pca.sel","Select transformed elements to include in PCA:", items.all,
+                    multiple=TRUE, selected=items.all)
       })
       
       output$pca.button <- renderUI({
@@ -220,6 +305,19 @@ shinyServer(
                        repel = TRUE)     # Avoid text overlapping
         })
       })  
+      
+      
+  ####   Visualize & Assign  ####
+  ###############################
+      
+      
+      
+      
+      
+  ####   Save & Export  ####
+  ##########################
+      
+      
       
       
     }) # end server
