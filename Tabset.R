@@ -8,10 +8,11 @@ library(DataExplorer)
 library(DT)
 library(plotly)
 library(dendextend)
+library(shinythemes)
 
 source('comp.profile.R')
 
-ui <- fluidPage(
+ui <- fluidPage(theme = shinytheme("sandstone"),
   titlePanel("Compositional Data Analysis"),
     
     tabsetPanel(
@@ -19,7 +20,9 @@ ui <- fluidPage(
       tabPanel("Data input", 
         sidebarLayout(
           sidebarPanel(
-          fileInput("file1", "Choose CSV File", accept=c("text/csv", "text/comma-separated-values,text/plain", ".csv")),
+          fileInput("file1", "Choose CSV File", accept=c("text/csv", 
+                                                         "text/comma-separated-values,text/plain", 
+                                                         ".csv")),
           uiOutput("attr"),
           uiOutput("chem"),
           uiOutput("ui.action") # button that defines data columns and plots to mainPanel window as datatable
@@ -93,12 +96,12 @@ ui <- fluidPage(
                  
                ) # end mainPanel PCA
              ) # end sidebarLayout PCA
-    ), # end tabPanel "PCA"
+    ), # end tabPanel "Cluster Analysis"
     
     tabPanel("Save and Export",
              sidebarLayout(
                 sidebarPanel(
-                "File will be exported to the current R working directory. Do not include file extension in name",
+                "File will be exported to the current R working directory. Do not include file extension in name.",
                 textInput('ExportName', label = 'Type name for export'),
                 br(),
                 actionButton("Save","Click here to save file")
@@ -117,7 +120,7 @@ ui <- fluidPage(
 
 
 
-# server.R
+# server.R===================================
 server <- (function(input, output) {
   
 #### Data Input Chunk
@@ -342,3 +345,4 @@ server <- (function(input, output) {
 
 
 shinyApp(ui,server)
+

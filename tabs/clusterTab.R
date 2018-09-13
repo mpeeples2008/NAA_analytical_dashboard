@@ -6,19 +6,28 @@
 
 tabPanel(title = "Cluster", icon = icon("adjust", lib = "glyphicon"),
          
-                  sidebarLayout(
-                    sidebarPanel(
-                      #uiOutput("chem.pca"),
-                      #uiOutput("pca.button"),
-                      #br(),
-                      #column(12,plotOutput("eigen.plot", width = 300, height = 300))
-                    ), # end sidebarPanel
+         sidebarLayout(
+           sidebarPanel(
+             uiOutput("cluster.options"),
+             br(),
+             uiOutput("ui.cluster"), 
+             br(), 
+             uiOutput("hclust.options"),
+             uiOutput("dist.options")
+           ), # end sidebarPanel
                     
-                    mainPanel(
+          mainPanel(
+            tabsetPanel(
+              id = "dataset.cluster",
+              tabPanel("Hierarchical Clustering", 
+                       plotOutput("element.dend"))
+                       
+            )
+
                       
                     ) # end mainPanel PCA
                   ) # end sidebarLayout PCA
-         ) # end tabPanel "Cluster Analysis"
+         ) # end tabPanel "Cluster"
          
          
          
