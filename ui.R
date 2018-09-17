@@ -16,15 +16,15 @@
 shinyUI(  
   
   navbarPage(theme = shinytheme("sandstone"),
-             title = strong("TACA"), 
-             windowTitle = "TACA - Tools for Archaeological Compositional Analysis", 
+             title = strong("ArchaeoDash"), 
+             windowTitle = "ArchaeoDash - A Dashboard for Archaeological Compositional Analysis", 
              fluid = TRUE, id = "nav",
              
              source("tabs/homeTab.R", local = TRUE)$value,
              source("tabs/datainputTab.R", local = TRUE)$value,
              source("tabs/imputetransformTab.R", local = TRUE)$value,
+             source("tabs/ordinationTab.R", local = TRUE)$value,
              source("tabs/clusterTab.R", local = TRUE)$value,
-             source("tabs/ordinationTab.R", local = TRUE)$value, 
              source("tabs/visualizeassignTab.R", local = TRUE)$value,
              source("tabs/saveexportTab.R", local = TRUE)$value
              
