@@ -10,8 +10,7 @@ tabPanel(title = "Home", icon = icon("home"),
   
          
          div(id = "home", 
-             p(class = "lead", "Welcome to", strong("TACA"),": ", strong("T"), "ools for", strong("A"),
-               "rchaeological ", strong("C"), "ompositional", strong("A"), "nalysis, a user friendly web application for the statistical analysis and visualization of geochemical compositional data of archaeological materials.")
+             p(class = "lead", "Welcome to", strong("ArchaeoDash"),"- ", "A user friendly web application for the statistical analysis and visualization of geochemical compositional data of archaeological materials.")
              
 # Once a name and overall functionality is decided upon, this area can be populated with a basic overview
 # of the shiny app and resources to learn more
