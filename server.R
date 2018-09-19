@@ -11,6 +11,8 @@ library(DT)
 library(plotly)
 library(dendextend)
 library(shinythemes)
+library(cluster)
+
 
 shinyServer(
   function(input, output, session) {
@@ -222,7 +224,7 @@ shinyServer(
         # Output of options if HCA chosen
         if (input$cluster.parent == "hca"){
           
-          cluster_input_selections <- list(# HCA Distance method choices
+          cluster_input_selections <- list(# HCA distance method 
                                            selectInput("clust.dist.method", 
                                                   label = "Select HCA Distance Method", 
                                                   choices=list("Euclidean" = "euclidean", 
@@ -231,7 +233,7 @@ shinyServer(
                                                                "Maximum" = "maximum", 
                                                                "Mahalanobis" = "mahalanobis_clust"),
                                                      selected = "euclidean"), 
-                                           # HCA Linkage criterion choices
+                                           # HCA linkage criterion choices
                                            selectInput("hclust.method", 
                                                        label = ("Select HCA Linkage Criterion"), 
                                                        choices=list("Average Linkage" = "average", 
@@ -241,6 +243,55 @@ shinyServer(
                                                        selected = "average")
                                             )
             
+        }
+        
+        # Output of options if HDCA is chosen
+        if (input$cluster.parent == "hdca"){
+          cluster_input_selections <- list(# HDCA distance method 
+                                            selectInput("clust.dist.method", 
+                                                        label = "Select HDCA Distance Method", 
+                                                        choices=list("Euclidean" = "euclidean", 
+                                                                     "Manhattan" = "manhattan"),
+                                                        selected = "euclidean")
+            
+                                          )
+          
+        }
+        
+        # Output of options if k-means is chosen
+        if (input$cluster.parent == "kmeans"){
+          cluster_input_selections <- list(# k-means number of centers
+                                            numericInput("kmeans.centers", 
+                                                         label = "Choose Number of Clusters",
+                                                         value = 2, min = 1, max = 20, step = 1),
+                                            # k-means number of random initial configurations
+                                            # best one is chosen and used
+                                            numericInput("kmeans.nstart",
+                                                         label = "Choose Number of Initial Configurations",
+                                                         value = 5, min = 1, max = 100, step = 1),
+                                            # k-means number of maximum iterations to converge and 
+                                            # reach stopping criterion
+                                            numericInput("kmeans.iter.max",
+                                                         label = "Maximum Number of Iterations",
+                                                         value = 10, min = 1, max = 200, step = 1)
+                                          )
+        }
+        
+        # Output of options if k-mediods is chosen
+        if (input$cluster.parent == "kmediods"){
+          cluster_input_selections <- list(# k-mediods Distance Method choices
+                                           selectInput("kmediods.dist.method", 
+                                                      label = "Select HDCA Distance Method", 
+                                                      choices=list("Euclidean" = "euclidean", 
+                                                                   "Manhattan" = "manhattan"),
+                                                      selected = "euclidean"),
+                                           # k-mediods number of clusters 
+                                            numericInput("kmediods.k", 
+                                                         label = "Choose Number of Clusters",
+                                                         value = 2, min = 1, max = 20, step = 1)
+                                           )
+          
+        
         }
         
         # Initialize selections based on clustering method chosen
