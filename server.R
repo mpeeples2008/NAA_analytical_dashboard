@@ -213,38 +213,41 @@ shinyServer(
       # Render UI options for cluster analysis
       output$cluster.options <- renderUI({
         df <- filedata()
-        radioButtons("cluster.method", label = ("Select Clustering Method"), 
-                     choices=list("None" = "none", 
-                                  "Hierarchical Clustering" = "hca", 
-                                  "Hierarchical Divisive Clustering" = "hdca", 
-                                  "k-means" = "kmean",
-                                  "k-mediods" = "kmed"),
-                     selected = "none")
+        
+        # Output if no cluster option selected 
+        if (input$cluster.parent == "None"){
+          return()
+        }
+        
+        # Output of options if HCA chosen
+        if (input$cluster.parent == "hca"){
+          
+          cluster_input_selections <- list(# HCA Distance method choices
+                                           selectInput("clust.dist.method", 
+                                                  label = "Select HCA Distance Method", 
+                                                  choices=list("Euclidean" = "euclidean", 
+                                                               "Manhattan" = "manhattan", 
+                                                               "Minkowski" = "minkowski",
+                                                               "Maximum" = "maximum", 
+                                                               "Mahalanobis" = "mahalanobis_clust"),
+                                                     selected = "euclidean"), 
+                                           # HCA Linkage criterion choices
+                                           selectInput("hclust.method", 
+                                                       label = ("Select HCA Linkage Criterion"), 
+                                                       choices=list("Average Linkage" = "average", 
+                                                                    "Complete Linkage" = "complete", 
+                                                                    "Ward's" = "ward.D", 
+                                                                    "Ward's squared" = "ward.D2"),
+                                                       selected = "average")
+                                            )
+            
+        }
+        
+        # Initialize selections based on clustering method chosen
+        cluster_input_selections
       })
       
-      # Render distance options for dendrogram plot
-      output$dist.options <- renderUI({
-        df <- filedata()
-        radioButtons("dist.method", label = ("Select Hierarchical Distance Method"), 
-                     choices=list("None" = "none", 
-                                  "Euclidean" = "euclidean", 
-                                  "Manhattan" = "manhattan", 
-                                  "Minkowski" = "minkowski",
-                                  "Maximum" = "maximum"),
-                     selected = "none")
-      })
         
-        # Render hierarchical clustering options for dendrogram plot
-        output$hclust.options <- renderUI({
-          df <- filedata()
-          radioButtons("hclust.method", label = ("Select Hierarchical Clustering Method"), 
-                       choices=list("None" = "none", 
-                                    "Average-Linkage" = "average", 
-                                    "Complete Linkage" = "complete", 
-                                    "Ward's" = "ward.D", 
-                                    "Ward's squared" = "ward.D2"),
-                       selected = "none")
-        })
         
         # Create distance objects based on hierarchical clustering using Euclidean distance
         #  edistclust_com <- hclust(dist(df_for_dist))

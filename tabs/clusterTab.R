@@ -8,12 +8,14 @@ tabPanel(title = "Cluster", icon = icon("adjust", lib = "glyphicon"),
          
          sidebarLayout(
            sidebarPanel(
-             uiOutput("cluster.options"),
-             br(),
-             uiOutput("ui.cluster"), 
-             br(), 
-             uiOutput("hclust.options"),
-             uiOutput("dist.options")
+             radioButtons("cluster.parent", "Select Clustering Method", 
+                          choices = c("None", 
+                                      "Hierarchical Agglomerative Clustering" = "hca", 
+                                      "Hierarchical Divisive Clustering" = "hdca", 
+                                      "k-means" = "kmeans",
+                                      "k-mediods" = "kmediods"), 
+                          selected = "None"),
+             uiOutput("cluster.options")
            ), # end sidebarPanel
                     
           mainPanel(
