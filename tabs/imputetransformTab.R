@@ -13,7 +13,7 @@ tabPanel(title = "Impute & Transform", icon = icon("transfer", lib= "glyphicon")
              uiOutput("ui.transform"),
              tags$hr(),
              "Numbers of samples with missing data by element (pre-imputation)",
-             plotOutput("miss.plot", width = 400, height = 400)
+             plotOutput("miss.plot", width = "250px")
            ), # end sidebarPanel
            
            mainPanel(

@@ -24,6 +24,7 @@ library(plotly)
 library(dendextend)
 library(shinythemes)
 library(cluster)
+library(stats)
 
   
 shinyUI(  

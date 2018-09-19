@@ -15,7 +15,8 @@ tabPanel(title = "Cluster", icon = icon("adjust", lib = "glyphicon"),
                                       "k-means" = "kmeans",
                                       "k-mediods" = "kmediods"), 
                           selected = "None"),
-             uiOutput("cluster.options")
+             uiOutput("cluster.options"), 
+             uiOutput("cluster.button")
            ), # end sidebarPanel
                     
           mainPanel(

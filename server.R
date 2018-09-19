@@ -12,6 +12,7 @@ library(plotly)
 library(dendextend)
 library(shinythemes)
 library(cluster)
+library(stats)
 
 
 shinyServer(
@@ -21,7 +22,7 @@ shinyServer(
   ##########################
     
       # Reactive input for file data
-      filedata <- reactive({
+      filedata <<- reactive({
         infile <- input$file1
         if (is.null(infile)) return(NULL)
         read.csv(infile$datapath, row.names=1, header=TRUE) # read in datafile with default options
@@ -82,7 +83,7 @@ shinyServer(
       # Render button to update datatable based on variable selections
       output$ui.action <- renderUI({
         if (is.null(input$file1)) return()
-        actionButton("action", "Press after reading file and selecting variables")
+        actionButton("action", "Press to confirm selections")
       })
       
     
@@ -99,11 +100,13 @@ shinyServer(
       output$impute.contents <- DT::renderDataTable({
         input$impute
         isolate({   
-          if (input$impute.method == "none") {
+          if (is.null(filedata())){ 
+            return()
+            } else if (input$impute.method == "none") {
             chem.imp <<- chem1
-            return(chem.imp)}
-          else {
-            chem.imp <<- complete(mice(chem1,method=input$impute.method)) # save to global environment
+            return(chem.imp)
+            } else {
+            chem.imp <<- mice::complete(mice(chem1,method=input$impute.method)) # save to global environment
             return(chem.imp)} # return output for datatable render
         })   
       })
@@ -111,7 +114,7 @@ shinyServer(
       # Render options for data imputation
       output$impute.options <- renderUI({
         df <- filedata()
-        radioButtons("impute.method", label=("Select Imputation Method"), 
+        radioButtons("impute.method", label = ("Select Imputation Method"), 
                      choices=list("None" = "none", 
                                   "Random Forest" = "rf", 
                                   "Predictive Mean Matching" = "pmm", 
@@ -129,7 +132,7 @@ shinyServer(
       output$transform.options <- renderUI({
         df <- filedata()
         if (is.null(df)) return()
-        radioButtons("transform.method", label=("Select Transformation"), 
+        radioButtons("transform.method", label = ("Select Transformation"), 
                      choices=list("None" = "none", 
                                   "Log-10" = "log10", 
                                   "Natural Log" = "log", 
@@ -141,7 +144,9 @@ shinyServer(
       output$transform.contents <- DT::renderDataTable({
         input$transform
         isolate({
-          if (input$transform.method == 'none') {
+          if (is.null(filedata())){
+            return() 
+          } else if (input$transform.method == 'none') {
             chem.t <<- chem.imp
             return(round(chem.t, 3))}
           else {if (input$transform.method == 'log10') {
@@ -161,7 +166,7 @@ shinyServer(
         input$action
         if (length(input$action) == 0) return(NULL)
         isolate({
-          plot_missing(chem1)
+          plot_missing(chem1, ggtheme = theme_bw())
         })
       })
       
@@ -207,9 +212,9 @@ shinyServer(
   ####################
       
       # Render button to run clustering algorithm 
-      output$ui.cluster <- renderUI({
+      output$cluster.button <- renderUI({
         if (is.null(input$file1)) return()
-        actionButton("cluster", "Run clustering algorithm")
+        actionButton("cluster.button", "Run clustering algorithm")
       })
       
       # Render UI options for cluster analysis
@@ -311,10 +316,10 @@ shinyServer(
           
         })
         
-        # Create dendrogram object
+      # Create dendrogram object
       #  dend_df_com <- as.dendrogram(edistclust_com)
         
-        # Plot dendogram object to look for good cut-off heights - 2.5 seems to be a good height
+      # Plot dendogram object to look for good cut-off heights - 2.5 seems to be a good height
       #  plot(dend_df_com, nodePar = list(lab.cex = 0.15, pch = NA))
         
       
