@@ -12,6 +12,17 @@
   # GeocompAnalysis
   # AECA (Archaeological elemental compositonal analysis)
   # Comp_Dash
+
+library(tidyverse)
+library(randomForest)
+library(ggplot2)
+library(mice)
+library(factoextra)
+library(DataExplorer)
+library(DT)
+library(plotly)
+library(dendextend)
+library(shinythemes)
   
 shinyUI(  
   
