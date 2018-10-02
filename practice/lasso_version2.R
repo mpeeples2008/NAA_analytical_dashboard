@@ -11,10 +11,19 @@ library(autoplotly)
 library(rhandsontable)
 library(shinythemes)
 
+# read in sample data INAA_test, create attribute and element data.frames, impute missing data and transform
+mydat <- read.csv('INAA_test.csv',header=T,row.names=1)
+attr1 <- mydat[,c(1,3,5,7)] # pull out attributes for plotting
+chem1 <- mydat[,c(8:21,23:40)] # pull out element data (excluing Ni)
+chem1[chem1==0] <- NA # set 0 values to NA
+chem.imp <- complete(mice(chem1,method='rf')) # impute missing data using the random forest approach
+chem.t <- log10(chem.imp) # log-base-10 transform raw element data
+pca1 <- prcomp(chem.t)
+
 attr1$CORE <- as.character(attr1$CORE)
 key <- row.names(attr1)
 attr1 <- cbind(key,attr1)
-dataset <<- cbind(attr1,chem.t,pca1$x)
+dataset <<- cbind(attr1,chem.t,pca1$x[1:307,])
 
 #reactive app
 ui <- fluidPage(
