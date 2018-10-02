@@ -25,7 +25,9 @@ library(dendextend)
 library(shinythemes)
 library(cluster)
 library(stats)
-
+library(shiny)
+library(shinydashboard)
+source('comp.profile.R')
   
 shinyUI(  
   
