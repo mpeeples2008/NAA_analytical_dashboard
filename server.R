@@ -108,6 +108,7 @@ shinyServer(
             return(chem.imp)
             } else {
             chem.imp <<- mice::complete(mice(chem1,method=input$impute.method)) # save to global environment
+            rownames(chem.imp) <<- rownames(chem1) # retain rownames after imputation
             return(chem.imp)} # return output for datatable render
         })   
       })
@@ -246,7 +247,17 @@ shinyServer(
                                                                     "Complete Linkage" = "complete", 
                                                                     "Ward's" = "ward.D", 
                                                                     "Ward's squared" = "ward.D2"),
-                                                       selected = "average")
+                                                       selected = "average"),
+                                           # HCA dendrogram leaf text size
+                                           numericInput("hca.leaf.text.size",
+                                                        label = "Leaf Text Size",
+                                                        value = 1, min = 0.05, max = 10, step = 0.05), 
+                                           #Slider for plot height
+                                           sliderInput('hcaplotHeight', 'Height of plot (in pixels)', 
+                                                       min = 100, max = 2000, value = 550),
+                                           #Slider for plot width
+                                           sliderInput('hcaplotWidth', 'Width of plot (in pixels)', 
+                                                       min = 100, max = 2000, value = 550)
                                             )
             
         }
@@ -304,34 +315,23 @@ shinyServer(
         cluster_input_selections
       })
       
-        
-        
-        # Create distance objects based on hierarchical clustering using Euclidean distance
-        #  edistclust_com <- hclust(dist(df_for_dist))
-        
-        # Render Element Dendrogram plot 
       
-      # Need to add a slider input for specimen text size 
+      # Render HCA dendrogram
+      ###TO DO: Figure out how to adjust the plot height
         output$element.dend <- renderPlot({
           if (is.null(input$cluster.button)) return(NULL)
           isolate({
               plot(as.dendrogram(hclust(dist(chem.t, method = input$clust.dist.method), 
                           method = input$hclust.method)),
-                      cex.axis = 0.75, cex.lab = 0.75, nodePar = list(lab.cex = 0.15, pch = NA),
-                      xlab = paste0(input$clust.dist.method, " distance;", input$hclust.method, " clustering")
-                   )
+                    cex.axis = 0.75, cex.lab = 0.75, horiz = TRUE,
+                    nodePar = list(lab.cex = input$hca.leaf.text.size, pch = NA),
+                    xlab = paste0(input$clust.dist.method, " distance;", input$hclust.method, " linkage")
+                   ) 
           })
      
         })
         
-      # Create dendrogram object
-      #  dend_df_com <- as.dendrogram(edistclust_com)
-        
-      # Plot dendogram object to look for good cut-off heights 
-      #  plot(dend_df_com, nodePar = list(lab.cex = 0.15, pch = NA))
-        
-      
-      
+    
       
   ####   Ordination   ####
   
