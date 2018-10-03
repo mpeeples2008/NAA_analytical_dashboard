@@ -251,13 +251,11 @@ shinyServer(
                                            # HCA dendrogram leaf text size
                                            numericInput("hca.leaf.text.size",
                                                         label = "Leaf Text Size",
-                                                        value = 1, min = 0.05, max = 10, step = 0.05), 
-                                           #Slider for plot height
-                                           sliderInput('hcaplotHeight', 'Height of plot (in pixels)', 
-                                                       min = 100, max = 2000, value = 550),
-                                           #Slider for plot width
-                                           sliderInput('hcaplotWidth', 'Width of plot (in pixels)', 
-                                                       min = 100, max = 2000, value = 550)
+                                                        value = 1, min = 0.05, max = 10, step = 0.05),
+                                           # HCA dendrogram cutree clusters
+                                           numericInput("hca.cutree.k",
+                                                        label = "Choose Numer of Clusters",
+                                                        value = 1, min = 1, max = 500, step = 1)
                                             )
             
         }
@@ -320,16 +318,17 @@ shinyServer(
       ###TO DO: Figure out how to adjust the plot height
         output$element.dend <- renderPlot({
           if (is.null(input$cluster.button)) return(NULL)
-          isolate({
-              plot(as.dendrogram(hclust(dist(chem.t, method = input$clust.dist.method), 
-                          method = input$hclust.method)),
-                    cex.axis = 0.75, cex.lab = 0.75, horiz = TRUE,
-                    nodePar = list(lab.cex = input$hca.leaf.text.size, pch = NA),
-                    xlab = paste0(input$clust.dist.method, " distance;", input$hclust.method, " linkage")
-                   ) 
-          })
-     
-        })
+            isolate({
+                plot(color_branches(as.dendrogram(hclust(dist(chem.t, method = input$clust.dist.method), 
+                                          method = input$hclust.method)), 
+                                    k = input$hca.cutree.k),
+                     cex.axis = 0.75, cex.lab = 0.75, horiz = TRUE,
+                     nodePar = list(lab.cex = input$hca.leaf.text.size, pch = NA),
+                     xlab = paste0(input$clust.dist.method, " distance;", input$hclust.method, " linkage")
+                ) 
+            })
+        }, height = 900, width = 700
+        )
         
     
       

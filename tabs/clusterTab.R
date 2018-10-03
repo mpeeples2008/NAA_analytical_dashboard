@@ -20,7 +20,7 @@ tabPanel(title = "Cluster", icon = icon("adjust", lib = "glyphicon"),
            ), # end sidebarPanel
                     
           mainPanel(
-             plotOutput("element.dend")
+             plotOutput("element.dend", width = "100%", height = "auto")
                        
             
 
