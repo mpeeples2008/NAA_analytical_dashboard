@@ -20,7 +20,7 @@ shinyServer(
   function(input, output, session) {
       
   #### Data Input Chunk ####
-  ##########################
+
     
       # Reactive input for file data
       filedata <<- reactive({
@@ -89,7 +89,7 @@ shinyServer(
       
     
   ####  Impute & Transform  ####
-  ##############################
+  
       
       # Render button and controls to Impute data
       output$ui.impute <- renderUI({
@@ -210,7 +210,7 @@ shinyServer(
       
       
   ####   Cluster  ####
-  ####################
+  
       
       # Render button to run clustering algorithm 
       output$cluster.button <- renderUI({
@@ -310,24 +310,31 @@ shinyServer(
         #  edistclust_com <- hclust(dist(df_for_dist))
         
         # Render Element Dendrogram plot 
+      
+      # Need to add a slider input for specimen text size 
         output$element.dend <- renderPlot({
-          if (length(chem.t[input$hist.el]) == 0) return(NULL)
-          plot(hclust(dist(chem.t, method = input$dist.method), method = input$hclust.method), 
-               xlab = paste0(input$dist.method, " distance;", input$clust.method, " clustering"))
-          
+          if (is.null(input$cluster.button)) return(NULL)
+          isolate({
+              plot(as.dendrogram(hclust(dist(chem.t, method = input$clust.dist.method), 
+                          method = input$hclust.method)),
+                      cex.axis = 0.75, cex.lab = 0.75, nodePar = list(lab.cex = 0.15, pch = NA),
+                      xlab = paste0(input$clust.dist.method, " distance;", input$hclust.method, " clustering")
+                   )
+          })
+     
         })
         
       # Create dendrogram object
       #  dend_df_com <- as.dendrogram(edistclust_com)
         
-      # Plot dendogram object to look for good cut-off heights - 2.5 seems to be a good height
+      # Plot dendogram object to look for good cut-off heights 
       #  plot(dend_df_com, nodePar = list(lab.cex = 0.15, pch = NA))
         
       
       
       
   ####   Ordination   ####
-  ########################
+  
       
       # Render multi-select lookup for choosing chemical concentration columns to include in 
       # Principal Components Analysis
@@ -379,14 +386,14 @@ shinyServer(
       
       
   ####   Visualize & Assign  ####
-  ###############################
+  
       
       
       
       
       
   ####   Save & Export  ####
-  ##########################
+  
       
       
       

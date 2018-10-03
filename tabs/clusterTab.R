@@ -20,12 +20,9 @@ tabPanel(title = "Cluster", icon = icon("adjust", lib = "glyphicon"),
            ), # end sidebarPanel
                     
           mainPanel(
-            tabsetPanel(
-              id = "dataset.cluster",
-              tabPanel("Hierarchical Clustering", 
-                       plotOutput("element.dend"))
+             plotOutput("element.dend")
                        
-            )
+            
 
                       
                     ) # end mainPanel PCA
