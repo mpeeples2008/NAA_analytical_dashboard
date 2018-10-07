@@ -278,6 +278,12 @@ shinyServer(
       actionButton("cluster.assign.button", "Record cluster assignments")
     })
     
+    # Text input for name of cluster solution assignment column name
+    output$cluster.column.text <- renderUI({
+      if (is.null(input$file1)) return()
+      textInput("cluster.column.text", "Input column name for cluster solution")
+    })
+    
     # Render UI options for cluster analysis
     output$cluster.options <- renderUI({
       df <- filedata()
@@ -296,8 +302,7 @@ shinyServer(
                                                 choices=list("Euclidean" = "euclidean", 
                                                              "Manhattan" = "manhattan", 
                                                              "Minkowski" = "minkowski",
-                                                             "Maximum" = "maximum", 
-                                                             "Mahalanobis" = "mahalanobis_clust"),
+                                                             "Maximum" = "maximum"), 
                                                    selected = "euclidean"), 
                                          # HCA linkage criterion choices
                                          selectInput("hclust.method", 
@@ -322,12 +327,19 @@ shinyServer(
       # Output of options if HDCA is chosen
       if (input$cluster.parent == "hdca"){
         cluster_input_selections <- list(# HDCA distance method 
-                                          selectInput("clust.dist.method", 
+                                          selectInput("hdca.dist.method", 
                                                       label = "Select HDCA Distance Method", 
                                                       choices=list("Euclidean" = "euclidean", 
                                                                    "Manhattan" = "manhattan"),
-                                                      selected = "euclidean")
-          
+                                                      selected = "euclidean"), 
+                                          # HCDA dendrogram leaf text size
+                                          numericInput("hdca.leaf.text.size",
+                                                       label = "Leaf Text Size",
+                                                       value = 1, min = 0.05, max = 10, step = 0.05),
+                                          # HCDA dendrogram cutree clusters
+                                          numericInput("hdca.cutree.k",
+                                                       label = "Choose Numer of Clusters",
+                                                       value = 1, min = 1, max = 500, step = 1)
                                         )
         
       }
@@ -351,16 +363,16 @@ shinyServer(
                                         )
       }
       
-      # Output of options if k-mediods is chosen
-      if (input$cluster.parent == "kmediods"){
-        cluster_input_selections <- list(# k-mediods Distance Method choices
-                                         selectInput("kmediods.dist.method", 
+      # Output of options if k-medoids is chosen
+      if (input$cluster.parent == "kmedoids"){
+        cluster_input_selections <- list(# k-medoids Distance Method choices
+                                         selectInput("kmedoids.dist.method", 
                                                     label = "Select HDCA Distance Method", 
                                                     choices=list("Euclidean" = "euclidean", 
                                                                  "Manhattan" = "manhattan"),
                                                     selected = "euclidean"),
-                                         # k-mediods number of clusters 
-                                          numericInput("kmediods.k", 
+                                         # k-medoids number of clusters 
+                                          numericInput("kmedoids.k", 
                                                        label = "Choose Number of Clusters",
                                                        value = 2, min = 1, max = 20, step = 1)
                                          )
@@ -374,7 +386,6 @@ shinyServer(
     
     
     # Render HCA dendrogram
-      output$element.dend <- renderPlot({
         if (is.null(input$cluster.button)) return(NULL)
           isolate({
               plot(color_branches(as.dendrogram(hclust(dist(chem.t, method = input$clust.dist.method), 
@@ -383,12 +394,35 @@ shinyServer(
                    cex.axis = 0.75, cex.lab = 0.75, horiz = TRUE,
                    nodePar = list(lab.cex = input$hca.leaf.text.size, pch = NA),
                    xlab = paste0(input$clust.dist.method, " distance;", input$hclust.method, " linkage")
-              ) 
-          })
+                 ) 
+                })
       }, height = 900, width = 700
       )
+     
       
-    # Assign cluster assignments based on HCA dendrogram selections
+    # Render HCDA dendrogram
+      output$element.dend.hdca <- renderPlot({
+        if (is.null(input$cluster.button)) return(NULL)
+        isolate({
+          plot(color_branches(as.dendrogram(diana(chem.t, metric = input$hdca.dist.method)), 
+                              k = input$hdca.cutree.k),
+               cex.axis = 0.75, cex.lab = 0.75, horiz = TRUE,
+               nodePar = list(lab.cex = input$hdca.leaf.text.size, pch = NA),
+               xlab = paste0(input$clust.dist.method, " distance")
+          ) 
+        })
+      }, height = 900, width = 700
+      )
+     
+      
+    # Render K-means 
+      
+      
+    # Render K-medoids   
+      
+      
+      
+    # Assign cluster assignments based on cluster solution
     
       
 ####   Visualize & Assign  ####
