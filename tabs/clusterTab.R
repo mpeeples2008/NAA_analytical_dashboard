@@ -28,8 +28,10 @@ tabPanel(title = "Cluster", icon = icon("adjust", lib = "glyphicon"),
                   plotOutput("element.dend.hca", width = "100%", height = "auto")),
               tabPanel("HDCA",
                   plotOutput("element.dend.hdca", width = "100%", height = "auto")),
-              tabPanel("K-means"),
-              tabPanel("K-medoids")
+              tabPanel("K-means", 
+                       plotOutput("element.kmeans", width = "100%", height = "auto")),
+              tabPanel("K-medoids", 
+                       plotOutput("element.kmedoids", width = "100%", height = "auto"))
             ) # end tabset panel  
                     ) # end mainPanel PCA
                   ) # end sidebarLayout PCA

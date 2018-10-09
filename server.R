@@ -386,6 +386,7 @@ shinyServer(
     
     
     # Render HCA dendrogram
+    output$element.dend.hca <- renderPlot({
         if (is.null(input$cluster.button)) return(NULL)
           isolate({
               plot(color_branches(as.dendrogram(hclust(dist(chem.t, method = input$clust.dist.method), 
@@ -416,10 +417,25 @@ shinyServer(
      
       
     # Render K-means 
-      
+      output$element.kmeans<- renderPlot({
+        if (is.null(input$cluster.button)) return(NULL)
+        isolate({
+          kmeans_solution <- kmeans(chem.t, centers = input$kmeans.centers, iter.max = input$kmeans.iter.max, 
+                                    nstart = input$kmeans.nstart)
+          fviz_cluster(kmeans_solution, data = chem.t) + theme_bw()
+        })
+      }, height = 900, width = 700
+      )
       
     # Render K-medoids   
-      
+      output$element.kmedoids <- renderPlot({
+        if (is.null(input$cluster.button)) return(NULL)
+        isolate({
+          pam_solution <- pam(chem.t, k = input$kmedoids.k, metric = input$kmedoids.dist.method)
+          fviz_cluster(pam_solution, data = chem.t) + theme_bw()
+        })
+      }, height = 900, width = 700
+      )
       
       
     # Assign cluster assignments based on cluster solution
