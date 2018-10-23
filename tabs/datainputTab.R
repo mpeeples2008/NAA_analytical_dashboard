@@ -6,9 +6,10 @@ tabPanel(title = "Data Input", icon = icon("upload"), id = "datainput",
          
          sidebarLayout(
            sidebarPanel(
-             fileInput("file1", "Choose CSV File", accept = c("text/csv", 
-                                                            "text/comma-separated-values,text/plain", 
-                                                            ".csv")),
+             fileInput("file1", "Choose CSV File", 
+                       accept = c("text/csv", 
+                                  "text/comma-separated-values,text/plain", 
+                                  ".csv")),
              uiOutput("attr"),
              uiOutput("chem"),
              uiOutput("ui.action") # button that defines data columns & plots to mainPanel window as datatable

@@ -65,7 +65,7 @@ shinyServer(
       isolate({   
         df <- filedata()
         chem1 <- df[input$chem]
-        chem1[chem1<=0] <- NA # set 0 values to NA
+        chem1[chem1 <= 0] <- NA # set 0 values to NA
         chem1 <<- chem1 # save to global environment
         return(chem1) # return output for datatable render
       })   
@@ -400,8 +400,21 @@ shinyServer(
       }, height = 900, width = 700
       )
      
+    # Render datatable of HCA dendrgram cluster solutions
+    output$hca.clusters <- DT::renderDataTable({
+      input$cluster.button
+      isolate({   
+        hca.clusterDT <- tbl_df(cutree(as.dendrogram(hclust(dist(chem.t, 
+                                                     method = input$clust.dist.method), 
+                                                     method = input$hclust.method)), 
+                                                     k = input$hca.cutree.k))
+        hca.clusterDT <- rownames_to_column(as.data.frame(hca.clusterDT), var = "Sample")
+        colnames(hca.clusterDT) <- c("Sample", input$cluster.column.text)
+        return(hca.clusterDT)
+      })   
+    })
       
-    # Render HCDA dendrogram
+    # Render HDCA dendrogram
       output$element.dend.hdca <- renderPlot({
         if (is.null(input$cluster.button)) return(NULL)
         isolate({
@@ -414,29 +427,63 @@ shinyServer(
         })
       }, height = 900, width = 700
       )
-     
+      
+    # Render datatable of HDCA dendrgram cluster solutions
+    output$hcda.clusters <- DT::renderDataTable({
+      input$cluster.button
+      isolate({   
+        hdca.clusterDT <- tbl_df(cutree(as.dendrogram(diana(chem.t, 
+                                                           metric = input$hdca.dist.method)), 
+                                                           k = input$hdca.cutree.k))
+        hdca.clusterDT <- rownames_to_column(as.data.frame(hdca.clusterDT), var = "Sample")
+        colnames(hdca.clusterDT) <- c("Sample", input$cluster.column.text)
+        return(hdca.clusterDT)
+      })   
+    }) 
       
     # Render K-means 
       output$element.kmeans<- renderPlot({
         if (is.null(input$cluster.button)) return(NULL)
         isolate({
-          kmeans_solution <- kmeans(chem.t, centers = input$kmeans.centers, iter.max = input$kmeans.iter.max, 
-                                    nstart = input$kmeans.nstart)
+          kmeans_solution <<- kmeans(chem.t, centers = input$kmeans.centers, 
+                                     iter.max = input$kmeans.iter.max, 
+                                     nstart = input$kmeans.nstart)
           fviz_cluster(kmeans_solution, data = chem.t) + theme_bw()
         })
       }, height = 900, width = 700
       )
       
+    # Render datatable of K-means cluster solutions
+    output$kmeans.clusters <- DT::renderDataTable({
+      input$cluster.button
+      isolate({   
+        kmeans.clusterDT <- kmeans_solution$cluster
+        kmeans.clusterDT <- rownames_to_column(as.data.frame(kmeans.clusterDT), var = "Sample")
+        colnames(kmeans.clusterDT) <- c("Sample", input$cluster.column.text)
+        return(kmeans.clusterDT)
+      })   
+    })
+      
     # Render K-medoids   
       output$element.kmedoids <- renderPlot({
         if (is.null(input$cluster.button)) return(NULL)
         isolate({
-          pam_solution <- pam(chem.t, k = input$kmedoids.k, metric = input$kmedoids.dist.method)
+          pam_solution <<- pam(chem.t, k = input$kmedoids.k, metric = input$kmedoids.dist.method)
           fviz_cluster(pam_solution, data = chem.t) + theme_bw()
         })
       }, height = 900, width = 700
       )
-      
+    
+    # Render datatable of K-medoids cluster solutions
+    output$kmedoids.clusters <- DT::renderDataTable({
+      input$cluster.button
+      isolate({   
+        kmedoids.clusterDT <- pam_solution$cluster
+        kmedoids.clusterDT <- rownames_to_column(as.data.frame(kmedoids.clusterDT), var = "Sample")
+        colnames(kmedoids.clusterDT) <- c("Sample", input$cluster.column.text)
+        return(kmedoids.clusterDT)
+      })   
+    })
       
     # Assign cluster assignments based on cluster solution
     

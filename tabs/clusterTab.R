@@ -16,22 +16,26 @@ tabPanel(title = "Cluster", icon = icon("adjust", lib = "glyphicon"),
                                       "k-mediods" = "kmedoids"), 
                           selected = "None"),
              uiOutput("cluster.options"), 
+             uiOutput("cluster.column.text"),
              uiOutput("cluster.button"), 
              br(),
-             uiOutput("cluster.column.text"),
              uiOutput("cluster.assign.button")
            ), # end sidebarPanel
                     
           mainPanel(
             tabsetPanel(
               tabPanel("HCA", 
-                  plotOutput("element.dend.hca", width = "100%", height = "auto")),
+                  plotOutput("element.dend.hca", width = "100%", height = "auto"), 
+                  DT::dataTableOutput("hca.clusters")),
               tabPanel("HDCA",
-                  plotOutput("element.dend.hdca", width = "100%", height = "auto")),
+                  plotOutput("element.dend.hdca", width = "100%", height = "auto"), 
+                  DT::dataTableOutput("hcda.clusters")),
               tabPanel("K-means", 
-                       plotOutput("element.kmeans", width = "100%", height = "auto")),
+                       plotOutput("element.kmeans", width = "100%", height = "auto"), 
+                       DT::dataTableOutput("kmeans.clusters")),
               tabPanel("K-medoids", 
-                       plotOutput("element.kmedoids", width = "100%", height = "auto"))
+                       plotOutput("element.kmedoids", width = "100%", height = "auto"), 
+                       DT::dataTableOutput("kmedoids.clusters"))
             ) # end tabset panel  
                     ) # end mainPanel PCA
                   ) # end sidebarLayout PCA
