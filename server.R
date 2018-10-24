@@ -14,6 +14,7 @@ library(cluster)
 library(stats)
 library(shiny)
 library(shinydashboard)
+library(cowplot)
 
 
 shinyServer(
@@ -282,6 +283,22 @@ shinyServer(
     output$cluster.column.text <- renderUI({
       if (is.null(input$file1)) return()
       textInput("cluster.column.text", "Input column name for cluster solution")
+    })
+    
+    # Render WSS and Silhouette graphs for optimal number of clusters for each method
+    output$optim.clusters <- renderPlot({
+      isolate({
+         kmeans_wss <-  fviz_nbclust(chem.t, kmeans, method = "wss") + 
+                            labs(title = "Optimal # of Cluster, Kmeans Elbow Method")
+         kmeans_sil <-  fviz_nbclust(chem.t, kmeans, method = "silhouette") + 
+                            labs(title = "Optimal # of Cluster, Kmeans Silhouette Method")
+         kmedoids_wss <- fviz_nbclust(chem.t, pam, method = "wss") + 
+                            labs(title = "Optimal # of Cluster, Kmedoids Elbow Method")
+         kmedoids_sil <-  fviz_nbclust(chem.t, pam, method = "silhouette") + 
+                            labs(title = "Optimal # of Cluster, Kmedoids ")
+         
+         plot_grid(kmeans_wss, kmeans_sil, kmedoids_wss, kmedoids_sil)
+      })
     })
     
     # Render UI options for cluster analysis

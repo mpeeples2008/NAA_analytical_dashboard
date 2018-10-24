@@ -27,6 +27,7 @@ library(cluster)
 library(stats)
 library(shiny)
 library(shinydashboard)
+library(cowplot)
 source('comp.profile.R')
   
 shinyUI(  

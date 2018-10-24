@@ -24,6 +24,8 @@ tabPanel(title = "Cluster", icon = icon("adjust", lib = "glyphicon"),
                     
           mainPanel(
             tabsetPanel(
+              tabPanel("Optimal Clusters",
+                  plotOutput("optim.clusters")),
               tabPanel("HCA", 
                   plotOutput("element.dend.hca", width = "100%", height = "auto"), 
                   DT::dataTableOutput("hca.clusters")),
