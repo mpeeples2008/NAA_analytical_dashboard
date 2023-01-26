@@ -10,8 +10,6 @@ library(plotly)
 library(dendextend)
 library(shinythemes)
 
-source('comp.profile.R')
-
 ui <- fluidPage(theme = shinytheme("sandstone"),
   titlePanel("Compositional Data Analysis"),
     

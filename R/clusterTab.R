@@ -1,10 +1,14 @@
-# UI elements for cluster tab
 
-# Future home for cluster analysis, hierarchical and divisive/kmeans/kmedoids etc. 
-
-
-
-tabPanel(title = "Cluster", icon = icon("adjust", lib = "glyphicon"),
+#' UI elements for cluster tab
+#'
+#'Future home for cluster analysis, hierarchical and divisive/kmeans/kmedoids etc. 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+clusterTab = function(){
+  tabPanel(title = "Cluster", icon = icon("adjust", lib = "glyphicon"),
          
          sidebarLayout(
            sidebarPanel(
@@ -42,7 +46,4 @@ tabPanel(title = "Cluster", icon = icon("adjust", lib = "glyphicon"),
                     ) # end mainPanel PCA
                   ) # end sidebarLayout PCA
          ) # end tabPanel "Cluster"
-         
-         
-         
-
+}

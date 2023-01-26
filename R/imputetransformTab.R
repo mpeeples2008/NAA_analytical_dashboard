@@ -1,6 +1,11 @@
-# UI elements for Impute - Transform Tab
 
-tabPanel(title = "Impute & Transform", icon = icon("transfer", lib= "glyphicon"), id = "imputetransform",
+#' UI elements for Impute - Transform Tab
+#'
+#' @return
+#' @export
+#'
+#' @examples
+imputetransformTab = function(){tabPanel(title = "Impute & Transform", icon = icon("transfer", lib= "glyphicon"), id = "imputetransform",
          
          sidebarLayout(
            sidebarPanel(
@@ -30,4 +35,4 @@ tabPanel(title = "Impute & Transform", icon = icon("transfer", lib= "glyphicon")
            ) # end mainPanel Impute
          ) # end sidebarLayout Impute
 ) # end tabPanel "Impute"
-
+}

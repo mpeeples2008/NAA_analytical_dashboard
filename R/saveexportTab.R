@@ -1,7 +1,11 @@
-# UI Elements for Saving and Exporting 
 
-
-tabPanel(title = "Save & Export", icon = icon("download"),
+#' UI Elements for Saving and Exporting 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+saveexportTab = function(){tabPanel(title = "Save & Export", icon = icon("download"),
                   sidebarLayout(
                     sidebarPanel(
                       "File will be exported to the current R working directory. Do not include file extension in name.",
@@ -15,5 +19,4 @@ tabPanel(title = "Save & Export", icon = icon("download"),
                     ) # end mainPanel Save and Export
                   ) # end sidebarLayout Save and Export
 ) # end tabPanel "Save and Export"
-         
-
+}

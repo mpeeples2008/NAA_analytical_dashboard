@@ -1,7 +1,11 @@
-# UI elements for ordination
 
-
-tabPanel(title = "Ordination", icon = icon("equalizer", lib = "glyphicon"), 
+#' UI elements for ordination
+#'
+#' @return
+#' @export
+#'
+#' @examples
+ordinationTab = function(){tabPanel(title = "Ordination", icon = icon("equalizer", lib = "glyphicon"), 
                   sidebarLayout(
                     sidebarPanel(
                       uiOutput("chem.pca"),
@@ -17,8 +21,4 @@ tabPanel(title = "Ordination", icon = icon("equalizer", lib = "glyphicon"),
                     ) # end mainPanel Ordination
                   ) # end sidebarLayout Ordination
 )
-         
-         
-       
-         
-
+}
