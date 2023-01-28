@@ -21,8 +21,9 @@ shinyServer(
   function(input, output, session) {
 
     # create reactive values
-    # rvals = reactiValues()
-    rvals <<- reactiveValues(); showNotification("warning: global variable is only for testing")
+    rvals = reactiValues()
+    # rvals <<- reactiveValues(); showNotification("warning: global variable is only for testing")
+    # input <<- input
 
 
     #### Import data ####
@@ -245,10 +246,10 @@ shinyServer(
     # Render PCA Eigenvalue plot
     output$pca.el.plot <- renderPlot({
       req(rvals$pca1)
-        fviz_pca_var(rvals$pca1,
-                     col.var = "contrib", # Color by contributions to the PC
-                     gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-                     repel = TRUE)     # Avoid text overlapping
+      fviz_pca_var(rvals$pca1,
+                   col.var = "contrib", # Color by contributions to the PC
+                   gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+                   repel = TRUE)     # Avoid text overlapping
     })
 
 
@@ -276,16 +277,16 @@ shinyServer(
 
     # Render WSS and Silhouette graphs for optimal number of clusters for each method
     output$optim.clusters <- renderPlot({
-        kmeans_wss <-  fviz_nbclust(rvals$chemicalData, kmeans, method = "wss") +
-          labs(title = "Optimal # of Cluster, Kmeans Elbow Method")
-        kmeans_sil <-  fviz_nbclust(rvals$chemicalData, kmeans, method = "silhouette") +
-          labs(title = "Optimal # of Cluster, Kmeans Silhouette Method")
-        kmedoids_wss <- fviz_nbclust(rvals$chemicalData, pam, method = "wss") +
-          labs(title = "Optimal # of Cluster, Kmedoids Elbow Method")
-        kmedoids_sil <-  fviz_nbclust(rvals$chemicalData, pam, method = "silhouette") +
-          labs(title = "Optimal # of Cluster, Kmedoids ")
+      kmeans_wss <-  fviz_nbclust(rvals$chemicalData, kmeans, method = "wss") +
+        labs(title = "Optimal # of Cluster, Kmeans Elbow Method")
+      kmeans_sil <-  fviz_nbclust(rvals$chemicalData, kmeans, method = "silhouette") +
+        labs(title = "Optimal # of Cluster, Kmeans Silhouette Method")
+      kmedoids_wss <- fviz_nbclust(rvals$chemicalData, pam, method = "wss") +
+        labs(title = "Optimal # of Cluster, Kmedoids Elbow Method")
+      kmedoids_sil <-  fviz_nbclust(rvals$chemicalData, pam, method = "silhouette") +
+        labs(title = "Optimal # of Cluster, Kmedoids ")
 
-        plot_grid(kmeans_wss, kmeans_sil, kmedoids_wss, kmedoids_sil)
+      plot_grid(kmeans_wss, kmeans_sil, kmedoids_wss, kmedoids_sil)
     })
 
     # Render UI options for cluster analysis
@@ -446,10 +447,10 @@ shinyServer(
     })
 
     # Render K-means
-    output$element.kmeans<- renderPlot({
+    output$element.kmeans <- renderPlot({
       if (is.null(input$cluster.button)) return(NULL)
       isolate({
-        kmeans_solution <<- kmeans(rvals$chemicalData, centers = input$kmeans.centers,
+        kmeans_solution = kmeans(rvals$chemicalData, centers = input$kmeans.centers,
                                    iter.max = input$kmeans.iter.max,
                                    nstart = input$kmeans.nstart)
         fviz_cluster(kmeans_solution, data = rvals$chemicalData) + theme_bw()
@@ -494,14 +495,119 @@ shinyServer(
 
     ####   Visualize & Assign  ####
 
+    output$sel <- renderUI({
+      vals = rvals$attrData[[input$Code]] %>% unique %>% sort
+      checkboxGroupInput("groups", "Groups to show:",
+                         choices = vals,
+                         selected = vals)
+    })
 
+    output$xvarUI = renderUI({
+      if(input$data.src == 'principal components'){
+        df = try(rvals$pca1$x %>% dplyr::as_tibble(),silent = T)
+      } else {
+        df = try(rvals$chemicalData, silent = T)
+      }
+      selectInput('xvar', 'X', names(df), selected = names(df)[1])
+    })
 
+    output$yvarUI = renderUI({
+      if(input$data.src == 'principal components'){
+        df = try(rvals$pca1$x %>% dplyr::as_tibble(),silent = T)
+      } else {
+        df = try(rvals$chemicalData, silent = T)
+      }
+      selectInput('yvar', 'y', names(df), selected = names(df)[2])
+    })
 
+    output$CodeUI = renderUI({
+      selectInput('Code', 'GROUP', choices = names(rvals$attrData))
+    })
 
+    observeEvent({
+      input$Code
+      input$xvar
+      input$yvar
+      input$groups
+      input$data.src
+    },{
+      req(input$Code)
+      req(input$xvar)
+      req(input$yvar)
+      req(input$groups)
+      if(input$data.src == 'principal components'){
+        df = try(rvals$pca1$x %>% dplyr::as_tibble(),silent = T)
+      } else {
+        df = try(rvals$chemicalData, silent = T)
+      }
+      rvals$plotlydf = tryCatch({df %>%
+          dplyr::mutate(rowid = 1:dplyr::n()) %>%
+          dplyr::select(rowid,x = tidyselect::all_of(input$xvar), y = tidyselect::all_of(input$yvar)) %>%
+          dplyr::bind_cols(rvals$attrData %>% dplyr::select(group = tidyselect::all_of(input$Code))) %>%
+          dplyr::filter(group %in% input$groups)},
+          error = function(e){
+            showNotification("Error returning plot dataset")
+            return(tibble::tibble)
+          })
+    })
+
+    observeEvent(input$`plotly_selected-A`,{
+      plotlySelect <<- plotly::event_data("plotly_selected")
+      if(length(plotlySelect) > 0){
+        rvals$brushSelected = rvals$plotlydf %>%
+          dplyr::filter(rowid %in% plotlySelect$key)
+      }
+    })
+
+    observeEvent(input$Change,{
+      req(rvals$brushSelected)
+      new = rvals$attrData %>%
+        dplyr::mutate(rowid = 1:n()) %>%
+        dplyr::filter(rowid %in% rvals$brushSelected$rowid) %>%
+        dplyr::mutate(!!as.name(input$Code) := input$NewGroup)
+      old = rvals$attrData %>%
+        dplyr::mutate(rowid = 1:n()) %>%
+        dplyr::filter(!rowid %in% rvals$brushSelected$rowid)
+      rvals$attrData = dplyr::bind_rows(new,old) %>%
+        dplyr::arrange(rowid) %>%
+        dplyr::select(-rowid)
+    })
+
+    # plot
+    output$plot <- renderPlotly({
+      req(rvals$plotlydf)
+      p1 <- ggplot(rvals$plotlydf, aes(x=x, y=y, color=group, shape=group, key = rowid)) +
+        geom_point() +
+        labs(x=input$xvar,y=input$yvar,color=input$Code,shape=input$Code)
+      if(input$Conf) {
+        n = rvals$plotlydf$group %>% unique %>% length()
+        if(n > 10){
+          showNotification("too many group members to plot confidence ellipses")
+        } else {
+          p1 <- p1 + stat_ellipse(level=input$int.set)
+        }
+      }
+      plotly::ggplotly(p1) %>% plotly::layout(dragmode = 'select')
+    })
+
+    output$brush <- renderUI({
+      if (is.null(rvals$brushSelected)) {
+        p("Click and drag events (i.e., select/lasso) appear here (double-click to clear)")
+      } else {
+        renderTable(rvals$brushSelected)
+      }
+    })
 
     ####   Save & Export  ####
 
-
+    output$Save <- downloadHandler(
+      filename = function() {
+        input$ExportName
+      },
+      content = function(file) {
+        rio::export(dplyr::bind_cols(rvals$attrData,rvals$chemicalData), file)
+      }
+    )
 
 
 
