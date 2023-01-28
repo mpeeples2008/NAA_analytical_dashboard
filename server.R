@@ -21,10 +21,11 @@ shinyServer(
   function(input, output, session) {
 
     # create reactive values
-    rvals = reactiveValues()
+    # rvals = reactiValues()
+    rvals <<- reactiveValues(); showNotification("warning: global variable is only for testing")
 
 
-    #### Import data ----
+    #### Import data ####
     shiny::observeEvent(input$file1,{
       print("importing file")
       if(!is.null(      input$file1)){
@@ -87,13 +88,24 @@ shinyServer(
 
     # Render button to update datatable based on variable selections
     output$ui.action <- renderUI({
-      if (is.null(input$file1)) return()
+      req(input$file1)
       actionButton("action", "Press to confirm selections")
     })
 
 
-    ####  Impute & Transform ----
+    ####  Impute & Transform ####
 
+    # Render options for data imputation
+    output$impute.options <- renderUI({
+      req(rvals$chemicalData)
+      radioButtons("impute.method", label = ("Select Imputation Method"),
+                   choices=list(
+                     "None" = "none",
+                     "Random Forest" = "rf",
+                     "Predictive Mean Matching" = "pmm",
+                     "Weighted Predictive Mean Matching" = "midastouch"),
+                   selected = "none")
+    })
 
     # Render button and controls to Impute data
     output$ui.impute <- renderUI({
@@ -104,7 +116,9 @@ shinyServer(
     observeEvent(input$impute,{
       req(input$impute.method)
       if(input$impute.method != "none"){
+        showNotification("imputing data")
         rvals$chemicalData = mice::complete(mice::mice(rvals$chemicalData,method = input$impute.method))
+        showNotification("completed imputing data")
       }
     })
 
@@ -114,102 +128,77 @@ shinyServer(
       DT::datatable(rvals$chemicalData, rownames = F)
     })
 
-    # Render options for data imputation
-    output$impute.options <- renderUI({
-      showNotification("imputing data")
-      df <- rvals$importedData
-      radioButtons("impute.method", label = ("Select Imputation Method"),
-                   choices=list("None" = "none",
-                                "Random Forest" = "rf",
-                                "Predictive Mean Matching" = "pmm",
-                                "Weighted Predictive Mean Matching" = "midastouch"),
-                   selected = "none")
-      showNotification("completed imputing data")
-    })
 
-    # Render button and controls to Impute data
+    # Render button and controls to transform data
     output$ui.transform <- renderUI({
-      if (is.null(input$file1)) return()
+      req(input$file1)
       actionButton("transform", "Transform data")
     })
 
-    # Render options for data imputation
+    # Render options for data transformation
     output$transform.options <- renderUI({
-      df <- rvals$importedData
-      if (is.null(df)) return()
+      req(rvals$chemicalData)
       radioButtons("transform.method", label = ("Select Transformation"),
                    choices=list("None" = "none",
                                 "Log-10" = "log10",
                                 "Natural Log" = "log",
-                                "Percent/Z-score" = "z.score"),
+                                "Percent/Z-score" = "zScore"),
                    selected = "none")
+    })
+
+    observeEvent(input$transform,{
+      req(rvals$chemicalData)
+      if (input$transform.method == 'zscale') {
+        rvals$chemicalData = zScale(rvals$chemicalData)
+      } else if(input$transform.method %in% c("log10","log")){
+        rvals$chemicalData = rvals$chemicalData %>%
+          dplyr::mutate_all(input$transform.method) %>%
+          dplyr::mutate_all(round,digits = 3)
+      } else if(input$transform.method == "none"){
+        rvals$chemicalData = rvals$chemicalData %>%
+          dplyr::mutate_all(round,digits = 3)
+      }
+      # get rid of infinite values
+      rvals$chemicalData = rvals$chemicalData %>% dplyr::mutate_all(list(function(c) case_when(!is.finite(c)~0,TRUE~c)))
     })
 
     # Render datatable of transformed chemical data
     output$transform.contents <- DT::renderDataTable({
       req(rvals$chemicalData)
       DT::datatable(rvals$chemicalData, rownames = F)
-      input$transform
-      isolate({
-        if (is.null(rvals$importedData)){
-          return()
-        } else if (input$transform.method == 'none') {
-          chem.t <<- chem.imp
-          return(round(chem.t, 3))}
-        else {if (input$transform.method == 'log10') {
-          chem.t <<- log10(chem.imp)
-          return(round(chem.t, 3))}
-          else {if (input$transform.method == 'log') {
-            chem.t <<- log(chem.imp)
-            return(round(chem.t, 3))}
-            else if (input$transform.method == 'z.score') {
-              chem.t <<- as.data.frame(scale(prop.table(as.matrix(chem.imp), 1) * 100))
-              return(round(chem.t, 3))}}}
-      })
     })
 
     # Render missing data plot
     output$miss.plot <- renderPlot({
-      input$action
-      if (length(input$action) == 0) return(NULL)
-      isolate({
-        plot_missing(chem1, ggtheme = theme_bw())
-      })
+      plot_missing(rvals$chemicalData, ggtheme = theme_bw())
     })
 
     # Render UI for univariate displays
     output$ui.univariate <- renderUI({
-      if (is.null(input$file1)) return()
-      isolate({
-        selectInput("hist.el","Element",choices=names(chem.t))
-      })
+      selectInput("hist.el","Element",choices=names(rvals$chemicalData))
     })
 
     # Render UI for univariate displays
     output$ui.hist.bin <- renderUI({
-      if (is.null(input$file1)) return()
-      isolate({
-        sliderInput("hist.bin","Number of Bins",min=2, max=100, value=30, step=1)
-      })
+      sliderInput("hist.bin","Number of Bins",min=2, max=100, value=30, step=1)
     })
 
-    # Render reset button for compositional profile plot
-    output$ui.comp <- renderUI({
-      if (is.null(input$file1)) return()
-      actionButton("comp.reset", "Reset Plot")
-    })
+    # # Render reset button for compositional profile plot
+    # output$ui.comp <- renderUI({
+    #   req(input$file1)
+    #   actionButton("comp.reset", "Reset Plot")
+    # })
 
     # Render compositional profile plot
     output$comp.profile <- renderPlot({
-      input$comp.reset
-      if (is.null(input$file1)) return()
-      comp.profile(chem.t)
+      req(rvals$chemicalData)
+      comp.profile(rvals$chemicalData)
     })
 
     # Render Element Histogram plot UI
     output$element.hist <- renderPlot({
-      if (length(chem.t[input$hist.el]) == 0) return(NULL)
-      ggplot(data = chem.t, aes_string(x = input$hist.el)) +
+      if (length(rvals$chemicalData[input$hist.el]) == 0) return(NULL)
+      ggplot(data = rvals$chemicalData, aes_string(x = input$hist.el)) +
         geom_histogram(fill = "blue", alpha = 0.5, bins = input$hist.bin) +
         labs(x = input$hist.el, y = " ")
     })
@@ -221,7 +210,7 @@ shinyServer(
     # Render multi-select lookup for choosing chemical concentration columns to include in
     # Principal Components Analysis
     output$chem.pca <- renderUI({
-      items.all <- names(chem.t)
+      items.all <- names(rvals$chemicalData)
       names(items.all)=items.all
       selectInput("chem.pca.sel","Select transformed elements to include in PCA:", items.all,
                   multiple=TRUE, selected=items.all)
@@ -231,39 +220,35 @@ shinyServer(
       actionButton("runPCA","Run PCA and Save Results")
     })
 
+    observeEvent(input$runPCA,{
+      req(rvals$chemicalData)
+      req(input$chem.pca.sel)
+      rvals$pca1 = prcomp(rvals$chemicalData[input$chem.pca.sel])
+    })
+
     # Render PCA plot
     output$pca.plot <- renderPlot({
-      input$runPCA
-      if (is.null(input$runPCA)) return(NULL)
-      isolate({
-        pca1 <<- prcomp(chem.t[input$chem.pca.sel])
-        fviz_pca_ind(pca1,
-                     col.ind = "cos2", # Color by the quality of representation
-                     gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-                     label='none',
-                     repel = TRUE)     # Avoid text overlapping
-      })
+      req(rvals$pca1)
+      fviz_pca_ind(rvals$pca1,
+                   col.ind = "cos2", # Color by the quality of representation
+                   gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+                   label='none',
+                   repel = TRUE)     # Avoid text overlapping
     })
 
     # Render PCA Eigenvalue plot
     output$eigen.plot <- renderPlot({
-      input$runPCA
-      if (is.null(input$runPCA)) return(NULL)
-      isolate({
-        fviz_eig(pca1)
-      })
+      req(rvals$pca1)
+      fviz_eig(rvals$pca1)
     })
 
     # Render PCA Eigenvalue plot
     output$pca.el.plot <- renderPlot({
-      input$runPCA
-      if (is.null(input$runPCA)) return(NULL)
-      isolate({
-        fviz_pca_var(pca1,
+      req(rvals$pca1)
+        fviz_pca_var(rvals$pca1,
                      col.var = "contrib", # Color by contributions to the PC
                      gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
                      repel = TRUE)     # Avoid text overlapping
-      })
     })
 
 
@@ -273,36 +258,34 @@ shinyServer(
 
     # Render button to run clustering algorithm
     output$cluster.button <- renderUI({
-      if (is.null(input$file1)) return()
+      req(input$file1)
       actionButton("cluster.button", "Run clustering algorithm")
     })
 
     # Render button to run clustering algorithm
     output$cluster.assign.button <- renderUI({
-      if (is.null(input$file1)) return()
+      req(input$file1)
       actionButton("cluster.assign.button", "Record cluster assignments")
     })
 
     # Text input for name of cluster solution assignment column name
     output$cluster.column.text <- renderUI({
-      if (is.null(input$file1)) return()
+      req(input$file1)
       textInput("cluster.column.text", "Input column name for cluster solution")
     })
 
     # Render WSS and Silhouette graphs for optimal number of clusters for each method
     output$optim.clusters <- renderPlot({
-      isolate({
-        kmeans_wss <-  fviz_nbclust(chem.t, kmeans, method = "wss") +
+        kmeans_wss <-  fviz_nbclust(rvals$chemicalData, kmeans, method = "wss") +
           labs(title = "Optimal # of Cluster, Kmeans Elbow Method")
-        kmeans_sil <-  fviz_nbclust(chem.t, kmeans, method = "silhouette") +
+        kmeans_sil <-  fviz_nbclust(rvals$chemicalData, kmeans, method = "silhouette") +
           labs(title = "Optimal # of Cluster, Kmeans Silhouette Method")
-        kmedoids_wss <- fviz_nbclust(chem.t, pam, method = "wss") +
+        kmedoids_wss <- fviz_nbclust(rvals$chemicalData, pam, method = "wss") +
           labs(title = "Optimal # of Cluster, Kmedoids Elbow Method")
-        kmedoids_sil <-  fviz_nbclust(chem.t, pam, method = "silhouette") +
+        kmedoids_sil <-  fviz_nbclust(rvals$chemicalData, pam, method = "silhouette") +
           labs(title = "Optimal # of Cluster, Kmedoids ")
 
         plot_grid(kmeans_wss, kmeans_sil, kmedoids_wss, kmedoids_sil)
-      })
     })
 
     # Render UI options for cluster analysis
@@ -410,7 +393,7 @@ shinyServer(
     output$element.dend.hca <- renderPlot({
       if (is.null(input$cluster.button)) return(NULL)
       isolate({
-        plot(color_branches(as.dendrogram(hclust(dist(chem.t, method = input$clust.dist.method),
+        plot(color_branches(as.dendrogram(hclust(dist(rvals$chemicalData, method = input$clust.dist.method),
                                                  method = input$hclust.method)),
                             k = input$hca.cutree.k),
              cex.axis = 0.75, cex.lab = 0.75, horiz = TRUE,
@@ -425,7 +408,7 @@ shinyServer(
     output$hca.clusters <- DT::renderDataTable({
       input$cluster.button
       isolate({
-        hca.clusterDT <- tbl_df(cutree(as.dendrogram(hclust(dist(chem.t,
+        hca.clusterDT <- tbl_df(cutree(as.dendrogram(hclust(dist(rvals$chemicalData,
                                                                  method = input$clust.dist.method),
                                                             method = input$hclust.method)),
                                        k = input$hca.cutree.k))
@@ -439,7 +422,7 @@ shinyServer(
     output$element.dend.hdca <- renderPlot({
       if (is.null(input$cluster.button)) return(NULL)
       isolate({
-        plot(color_branches(as.dendrogram(diana(chem.t, metric = input$hdca.dist.method)),
+        plot(color_branches(as.dendrogram(diana(rvals$chemicalData, metric = input$hdca.dist.method)),
                             k = input$hdca.cutree.k),
              cex.axis = 0.75, cex.lab = 0.75, horiz = TRUE,
              nodePar = list(lab.cex = input$hdca.leaf.text.size, pch = NA),
@@ -453,7 +436,7 @@ shinyServer(
     output$hcda.clusters <- DT::renderDataTable({
       input$cluster.button
       isolate({
-        hdca.clusterDT <- tbl_df(cutree(as.dendrogram(diana(chem.t,
+        hdca.clusterDT <- tbl_df(cutree(as.dendrogram(diana(rvals$chemicalData,
                                                             metric = input$hdca.dist.method)),
                                         k = input$hdca.cutree.k))
         hdca.clusterDT <- rownames_to_column(as.data.frame(hdca.clusterDT), var = "Sample")
@@ -466,10 +449,10 @@ shinyServer(
     output$element.kmeans<- renderPlot({
       if (is.null(input$cluster.button)) return(NULL)
       isolate({
-        kmeans_solution <<- kmeans(chem.t, centers = input$kmeans.centers,
+        kmeans_solution <<- kmeans(rvals$chemicalData, centers = input$kmeans.centers,
                                    iter.max = input$kmeans.iter.max,
                                    nstart = input$kmeans.nstart)
-        fviz_cluster(kmeans_solution, data = chem.t) + theme_bw()
+        fviz_cluster(kmeans_solution, data = rvals$chemicalData) + theme_bw()
       })
     }, height = 900, width = 700
     )
@@ -489,8 +472,8 @@ shinyServer(
     output$element.kmedoids <- renderPlot({
       if (is.null(input$cluster.button)) return(NULL)
       isolate({
-        pam_solution <<- pam(chem.t, k = input$kmedoids.k, metric = input$kmedoids.dist.method)
-        fviz_cluster(pam_solution, data = chem.t) + theme_bw()
+        pam_solution <<- pam(rvals$chemicalData, k = input$kmedoids.k, metric = input$kmedoids.dist.method)
+        fviz_cluster(pam_solution, data = rvals$chemicalData) + theme_bw()
       })
     }, height = 900, width = 700
     )
