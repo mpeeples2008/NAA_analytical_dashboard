@@ -5,13 +5,13 @@
 # Need to think of a better name "TACA" is a placeholder
 
 # Potential options:
-  # TACA (Tools for Archaeological Compositional Analysis)
-  # ACAD (Archaeological Compositional Analysis Dashboard)
-  # ArchaeoDash
-  # ArchCompAnalysis
-  # GeocompAnalysis
-  # AECA (Archaeological elemental compositonal analysis)
-  # Comp_Dash
+# TACA (Tools for Archaeological Compositional Analysis)
+# ACAD (Archaeological Compositional Analysis Dashboard)
+# ArchaeoDash
+# ArchCompAnalysis
+# GeocompAnalysis
+# AECA (Archaeological elemental compositonal analysis)
+# Comp_Dash
 library(ArchaeoDash)
 library(tidyverse)
 library(randomForest)
@@ -36,7 +36,7 @@ shinyUI(
              windowTitle = "ArchaeoDash - A Dashboard for Archaeological Compositional Analysis",
              fluid = TRUE, id = "nav",
 
-            homeTab(),
+             homeTab(),
              datainputTab(),
              imputetransformTab(),
              ordinationTab(),

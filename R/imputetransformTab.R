@@ -6,7 +6,7 @@
 #'
 #' @examples
 imputetransformTab = function(){tabPanel(title = "Impute & Transform", icon = icon("transfer", lib= "glyphicon"), id = "imputetransform",
-         
+
          sidebarLayout(
            sidebarPanel(
              uiOutput("impute.options"),
@@ -20,13 +20,12 @@ imputetransformTab = function(){tabPanel(title = "Impute & Transform", icon = ic
              "Numbers of samples with missing data by element (pre-imputation)",
              plotOutput("miss.plot", width = "250px")
            ), # end sidebarPanel
-           
+
            mainPanel(
              tabsetPanel(
                id = "dataset.impute",
-               tabPanel("Elements Imputed", DT::dataTableOutput("impute.contents")),
-               tabPanel("Elements Transformed", DT::dataTableOutput("transform.contents")),
-               tabPanel("Univariate Plots", 
+               tabPanel("Elements", DT::dataTableOutput("elementsDT")),
+               tabPanel("Univariate Plots",
                         uiOutput("ui.univariate"),
                         uiOutput("ui.hist.bin"),
                         plotOutput("element.hist")),

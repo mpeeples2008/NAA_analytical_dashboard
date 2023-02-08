@@ -21,7 +21,7 @@ shinyServer(
   function(input, output, session) {
 
     # create reactive values
-    rvals = reactiValues()
+    rvals = reactiveValues()
     # rvals <<- reactiveValues(); showNotification("warning: global variable is only for testing")
     # input <<- input
 
@@ -124,7 +124,7 @@ shinyServer(
     })
 
     # Render datatable of imputed chemical data
-    output$impute.contents <- DT::renderDataTable({
+    output$elementsDT <- DT::renderDataTable({
       req(rvals$chemicalData)
       DT::datatable(rvals$chemicalData, rownames = F)
     })
