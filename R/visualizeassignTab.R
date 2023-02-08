@@ -10,11 +10,16 @@ visualizeassignTab = function() {
   tabPanel(
     title = "Visualize & Assign",
     icon = icon("signal", lib = "glyphicon"),
-    fluidPage(sidebarLayout(
-      position = 'right',
-      sidebarPanel(uiOutput('sel')),
-      mainPanel(
-        plotlyOutput('plot', width = '1000px', height = '600px'),
+    fluidPage(
+      fluidRow(column(9,
+        plotlyOutput('plot', width = '100%', height = '600px')
+        ),
+        column(3,
+               div(
+               uiOutput('sel')),
+               style = "max-height: 600px !important; overflow: auto;"
+        )
+      ),
         fluidRow(
           column(
             2,
@@ -59,9 +64,7 @@ visualizeassignTab = function() {
             # actionButton("exit", label = "Return to R and write data")
           )
         ),
-        uiOutput('brush'),
-        verbatimTextOutput('checkGrps') # what does this do?
+        uiOutput('brush')
       )
-    ))
   )
 }
