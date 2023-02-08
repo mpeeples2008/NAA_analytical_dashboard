@@ -1,37 +1,19 @@
 #' server.R
 library(ArchaeoDash)
-library(tidyverse)
-library(randomForest)
-library(ggplot2)
-library(mice)
-library(factoextra)
-library(DataExplorer)
-library(DT)
-library(plotly)
-library(dendextend)
-library(shinythemes)
-library(cluster)
-library(stats)
 library(shiny)
-library(shinydashboard)
-library(cowplot)
-
 
 shinyServer(function(input, output, session) {
   # create reactive values
   # rvals = reactiveValues()
-  rvals <<-
-    reactiveValues()
-  showNotification("warning: global variable is only for testing")
+  rvals <<- reactiveValues(); showNotification("warning: global variable is only for testing")
   input <<- input
 
 
   #### Import data ####
-  shiny::observeEvent(input$file1, {
+  observeEvent(input$file1, {
     print("importing file")
     if (!is.null(input$file1)) {
-      rvals$importedData = rvals$selectedData = rio::import(input$file1$datapath,
-                                                            setclass = 'tibble')
+      rvals$importedData = rvals$selectedData = rio::import(input$file1$datapath,setclass = 'tibble')
     }
   })
 
@@ -729,6 +711,29 @@ shinyServer(function(input, output, session) {
     } else {
       renderTable(rvals$attrBrush)
     }
+  })
+
+  #### multiplots ####
+
+  output$multiplot = renderPlot({
+    req(rvals$chemicalData)
+    p = rvals$chemicalData %>%
+      dplyr::bind_cols(rvals$attrData %>% dplyr::select(tidyselect::any_of(group))) %>%
+      dplyr::select(tidyselect::any_of(c(xvar,yvar,group))) %>%
+      tidyr::pivot_longer(-tidyselect::all_of(c(xvar,group))) %>%
+      ggplot2::ggplot(ggplot2::aes(y = !!as.name(xvar), x = value, color = !!as.name(group))) +
+      ggplot2::geom_point() +
+      ggplot2::xlab("") +
+      ggplot2::theme_bw()
+    if(length(yvar) > 1){
+      p = p +
+        ggplot2::facet_wrap(~name, scales = "free_x", strip.position = "bottom") +
+        ggplot2::theme(strip.background = ggplot2::element_rect(fill = '#404040'),
+              strip.text = ggplot2::element_text(color = "white"))
+    } else {
+      p = p + ggplot2::xlab(yvar)
+    }
+    p
   })
 
   ####   Save & Export  ####
