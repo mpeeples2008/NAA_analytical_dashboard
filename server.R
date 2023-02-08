@@ -71,8 +71,9 @@ shinyServer(
         dplyr::select(tidyselect::any_of(input$attr))
       rvals$chemicalData = rvals$importedData %>%
         dplyr::select(tidyselect::any_of(input$chem)) %>%
-        # set na to 0
-        mutate_all(list(function(x)tidyr::replace_na(x,0)))
+        # set below zero to
+        mutate_all(list(function(x)case_when(x < 0~0,TRUE~x))) %>%
+        mutate_all(list(function(x)dplyr::na_if(x,0)))
     })
 
     # Render datatable of chemical data based on selected variables
