@@ -75,9 +75,9 @@ shinyServer(function(input, output, session) {
     rvals$chemicalData = rvals$importedData %>%
       dplyr::select(tidyselect::any_of(input$chem)) %>%
       # set below zero to
-      mutate_all(list(function(x)
-        case_when(x < 0 ~ 0, TRUE ~ x))) %>%
-      mutate_all(list(function(x)
+      dplyr::mutate_all(list(function(x)
+        dplyr::case_when(x < 0 ~ 0, TRUE ~ x))) %>%
+      dplyr::mutate_all(list(function(x)
         dplyr::na_if(x, 0)))
   })
 
@@ -176,7 +176,7 @@ shinyServer(function(input, output, session) {
     }
     # get rid of infinite values
     rvals$chemicalData = rvals$chemicalData %>% dplyr::mutate_all(list(function(c)
-      case_when(!is.finite(c) ~ 0, TRUE ~ c)))
+      dplyr::case_when(!is.finite(c) ~ 0, TRUE ~ c)))
   })
 
   # Render datatable of transformed chemical data
@@ -187,7 +187,8 @@ shinyServer(function(input, output, session) {
 
   # Render missing data plot
   output$miss.plot <- renderPlot({
-    plot_missing(rvals$chemicalData, ggtheme = theme_bw())
+    req(rvals$chemicalData)
+    DataExplorer::plot_missing(rvals$chemicalData, ggtheme = ggplot2::theme_bw())
   })
 
   # Render UI for univariate displays
@@ -223,11 +224,11 @@ shinyServer(function(input, output, session) {
   output$element.hist <- renderPlot({
     if (length(rvals$chemicalData[input$hist.el]) == 0)
       return(NULL)
-    ggplot(data = rvals$chemicalData, aes_string(x = input$hist.el)) +
-      geom_histogram(fill = "blue",
+    ggplot2::ggplot(data = rvals$chemicalData, ggplot2::aes_string(x = input$hist.el)) +
+      ggplot2::geom_histogram(fill = "blue",
                      alpha = 0.5,
                      bins = input$hist.bin) +
-      labs(x = input$hist.el, y = " ")
+      ggplot2::labs(x = input$hist.el, y = " ")
   })
 
 
@@ -261,7 +262,7 @@ shinyServer(function(input, output, session) {
   # Render PCA plot
   output$pca.plot <- renderPlot({
     req(rvals$pca1)
-    fviz_pca_ind(
+    factoextra::fviz_pca_ind(
       rvals$pca1,
       col.ind = "cos2",
       # Color by the quality of representation
@@ -274,13 +275,13 @@ shinyServer(function(input, output, session) {
   # Render PCA Eigenvalue plot
   output$eigen.plot <- renderPlot({
     req(rvals$pca1)
-    fviz_eig(rvals$pca1)
+    factoextra::fviz_eig(rvals$pca1)
   })
 
   # Render PCA Eigenvalue plot
   output$pca.el.plot <- renderPlot({
     req(rvals$pca1)
-    fviz_pca_var(
+    factoextra::fviz_pca_var(
       rvals$pca1,
       col.var = "contrib",
       # Color by contributions to the PC
@@ -321,19 +322,19 @@ shinyServer(function(input, output, session) {
       if(input$cluster.column.text == "") clusterName = "cluster" else clusterName = input$cluster.column.text
       if (input$cluster.parent == "nClust") {
         kmeans_wss <-
-          fviz_nbclust(rvals$chemicalData, kmeans, method = "wss") +
-          labs(title = "Optimal # of Cluster, Kmeans Elbow Method")
+          factoextra::fviz_nbclust(rvals$chemicalData, kmeans, method = "wss") +
+          ggplot2::labs(title = "Optimal # of Cluster, Kmeans Elbow Method")
         kmeans_sil <-
-          fviz_nbclust(rvals$chemicalData, kmeans, method = "silhouette") +
-          labs(title = "Optimal # of Cluster, Kmeans Silhouette Method")
+          factoextra::fviz_nbclust(rvals$chemicalData, kmeans, method = "silhouette") +
+          ggplot2::labs(title = "Optimal # of Cluster, Kmeans Silhouette Method")
         kmedoids_wss <-
-          fviz_nbclust(rvals$chemicalData, pam, method = "wss") +
-          labs(title = "Optimal # of Cluster, Kmedoids Elbow Method")
+          factoextra::fviz_nbclust(rvals$chemicalData, cluster::pam, method = "wss") +
+          ggplot2::labs(title = "Optimal # of Cluster, Kmedoids Elbow Method")
         kmedoids_sil <-
-          fviz_nbclust(rvals$chemicalData, pam, method = "silhouette") +
-          labs(title = "Optimal # of Cluster, Kmedoids ")
+          factoextra::fviz_nbclust(rvals$chemicalData, cluster::pam, method = "silhouette") +
+          ggplot2::labs(title = "Optimal # of Cluster, Kmedoids ")
 
-        rvals$clusterPlot = function(){plot_grid(kmeans_wss, kmeans_sil, kmedoids_wss, kmedoids_sil)}
+        rvals$clusterPlot = function(){cowplot::plot_grid(kmeans_wss, kmeans_sil, kmedoids_wss, kmedoids_sil)}
       } else if (input$cluster.parent == "hca") {
         hc = as.dendrogram(
           hclust(
@@ -342,7 +343,7 @@ shinyServer(function(input, output, session) {
           )
         )
         rvals$clusterPlot = function(){plot(
-          color_branches(hc,
+          dendextend::color_branches(hc,
           k = input$hca.cutree.k),
           cex.axis = 0.75,
           cex.lab = 0.75,
@@ -362,15 +363,15 @@ shinyServer(function(input, output, session) {
           tbl_df(cutree(hc,
           k = input$hca.cutree.k))
         rvals$clusterDT <-
-          rownames_to_column(as.data.frame(rvals$clusterDT), var = "Sample")
+          tibble::rownames_to_column(as.data.frame(rvals$clusterDT), var = "Sample")
         colnames(rvals$clusterDT) <-
           c("Sample", clusterName)
       } else if (input$cluster.parent == "hdca") {
         hc = as.dendrogram(
-          diana(rvals$chemicalData, metric = input$hdca.dist.method)
+          cluster::diana(rvals$chemicalData, metric = input$hdca.dist.method)
         )
         rvals$clusterPlot = function(){plot(
-          color_branches(hc,
+          dendextend::color_branches(hc,
           k = input$hdca.cutree.k),
           cex.axis = 0.75,
           cex.lab = 0.75,
@@ -385,7 +386,7 @@ shinyServer(function(input, output, session) {
           tbl_df(cutree(hc,
           k = input$hdca.cutree.k))
         rvals$clusterDT <-
-          rownames_to_column(as.data.frame(rvals$clusterDT), var = "Sample")
+          tibble::rownames_to_column(as.data.frame(rvals$clusterDT), var = "Sample")
         colnames(rvals$clusterDT) <-
           c("Sample", clusterName)
       } else if (input$cluster.parent == "kmeans") {
@@ -395,26 +396,26 @@ shinyServer(function(input, output, session) {
           iter.max = input$kmeans.iter.max,
           nstart = input$kmeans.nstart
         )
-        rvals$clusterPlot = function(){fviz_cluster(
+        rvals$clusterPlot = function(){factoextra::fviz_cluster(
           kmeans_solution, data = rvals$chemicalData
           ) +
-          theme_bw()}
+          ggplot2::theme_bw()}
         rvals$clusterDT = kmeans_solution$cluster
         rvals$clusterDT <-
-          rownames_to_column(as.data.frame(rvals$clusterDT), var = "Sample")
+          tibble::rownames_to_column(as.data.frame(rvals$clusterDT), var = "Sample")
         colnames(rvals$clusterDT) <-
           c("Sample", clusterName)
       } else if (input$cluster.parent == "kmedoids") {
         pam_solution =
-          pam(
+          cluster::pam(
             rvals$chemicalData,
             k = input$kmedoids.k,
             metric = input$kmedoids.dist.method
           )
-        rvals$clusterPlot = function(){fviz_cluster(pam_solution, data = rvals$chemicalData) + theme_bw()}
+        rvals$clusterPlot = function(){factoextra::fviz_cluster(pam_solution, data = rvals$chemicalData) + ggplot2::theme_bw()}
         rvals$clusterDT <- pam_solution$cluster
         rvals$clusterDT <-
-          rownames_to_column(as.data.frame(rvals$clusterDT), var = "Sample")
+          tibble::rownames_to_column(as.data.frame(rvals$clusterDT), var = "Sample")
         colnames(rvals$clusterDT) <-
           c("Sample", clusterName)
       }
@@ -590,6 +591,7 @@ shinyServer(function(input, output, session) {
   ####   Visualize & Assign  ####
 
   output$sel <- renderUI({
+    req(rvals$attrData)
     vals = rvals$attrData[[input$Code]] %>% unique %>% sort
     checkboxGroupInput("groups",
                        "Groups to show:",
@@ -598,6 +600,7 @@ shinyServer(function(input, output, session) {
   })
 
   output$xvarUI = renderUI({
+    req(rvals$chemicalData)
     if (input$data.src == 'principal components') {
       df = try(rvals$pca1$x %>% dplyr::as_tibble(), silent = T)
     } else {
@@ -607,6 +610,7 @@ shinyServer(function(input, output, session) {
   })
 
   output$yvarUI = renderUI({
+    req(rvals$chemicalData)
     if (input$data.src == 'principal components') {
       df = try(rvals$pca1$x %>% dplyr::as_tibble(), silent = T)
     } else {
@@ -617,6 +621,22 @@ shinyServer(function(input, output, session) {
 
   output$CodeUI = renderUI({
     selectInput('Code', 'GROUP', choices = input$attrGroups)
+  })
+
+  output$xvar2UI = renderUI({
+    req(rvals$chemicalData)
+    selectInput('xvar2', 'X', names(rvals$chemicalData))
+  })
+
+  output$yvar2UI = renderUI({
+    req(rvals$chemicalData)
+    req(input$xvar2)
+    choices = names(rvals$chemicalData)[which(names(rvals$chemicalData) != input$xvar2)]
+    selectInput('yvar2', 'Y', choices = choices, multiple = T, selected = choices)
+  })
+
+  output$Code2UI = renderUI({
+    selectInput('multigroup', 'GROUP', choices = input$attrGroups)
   })
 
   observeEvent({
@@ -676,19 +696,19 @@ shinyServer(function(input, output, session) {
   })
 
   # plot
-  output$plot <- renderPlotly({
+  output$plot <- plotly::renderPlotly({
     req(rvals$plotlydf)
     p1 <-
-      ggplot(rvals$plotlydf,
-             aes(
+      ggplot2::ggplot(rvals$plotlydf,
+                      ggplot2::aes(
                x = x,
                y = y,
                color = group,
                shape = group,
                key = rowid
              )) +
-      geom_point() +
-      labs(
+      ggplot2::geom_point() +
+      ggplot2::labs(
         x = input$xvar,
         y = input$yvar,
         color = input$Code,
@@ -699,7 +719,7 @@ shinyServer(function(input, output, session) {
       if (n > 10) {
         showNotification("too many group members to plot confidence ellipses")
       } else {
-        p1 <- p1 + stat_ellipse(level = input$int.set)
+        p1 <- p1 + ggplot2::stat_ellipse(level = input$int.set)
       }
     }
     plotly::ggplotly(p1) %>% plotly::layout(dragmode = 'select')
@@ -715,25 +735,35 @@ shinyServer(function(input, output, session) {
 
   #### multiplots ####
 
-  output$multiplot = renderPlot({
+  output$multiplotUI = renderUI({
+    plotOutput("multiplot",width = "auto",height = input$plotHeight)
+  })
+
+  observeEvent(input$updateMultiplot,{
     req(rvals$chemicalData)
+    req(input$xvar2)
     p = rvals$chemicalData %>%
-      dplyr::bind_cols(rvals$attrData %>% dplyr::select(tidyselect::any_of(group))) %>%
-      dplyr::select(tidyselect::any_of(c(xvar,yvar,group))) %>%
-      tidyr::pivot_longer(-tidyselect::all_of(c(xvar,group))) %>%
-      ggplot2::ggplot(ggplot2::aes(y = !!as.name(xvar), x = value, color = !!as.name(group))) +
+      dplyr::bind_cols(rvals$attrData %>% dplyr::select(tidyselect::any_of(input$multigroup))) %>%
+      dplyr::select(tidyselect::any_of(c(input$xvar2,input$yvar2,input$multigroup))) %>%
+      tidyr::pivot_longer(-tidyselect::all_of(c(input$xvar2,input$multigroup))) %>%
+      ggplot2::ggplot(ggplot2::aes(y = !!as.name(input$xvar2), x = value, color = !!as.name(input$multigroup))) +
       ggplot2::geom_point() +
       ggplot2::xlab("") +
       ggplot2::theme_bw()
-    if(length(yvar) > 1){
+    if(length(input$yvar2) > 1){
       p = p +
         ggplot2::facet_wrap(~name, scales = "free_x", strip.position = "bottom") +
         ggplot2::theme(strip.background = ggplot2::element_rect(fill = '#404040'),
-              strip.text = ggplot2::element_text(color = "white"))
+                       strip.text = ggplot2::element_text(color = "white"))
     } else {
-      p = p + ggplot2::xlab(yvar)
+      p = p + ggplot2::xlab(input$yvar2)
     }
-    p
+    rvals$multiplot = p
+  })
+
+  output$multiplot = renderPlot({
+    req(rvals$multiplot)
+    rvals$multiplot
   })
 
   ####   Save & Export  ####

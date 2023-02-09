@@ -19,6 +19,7 @@ Imports:
     DT,
     factoextra,
     ggplot2,
+    magrittr,
     mice,
     plotly,
     randomForest,

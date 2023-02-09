@@ -59,25 +59,25 @@ visualizeassignTab = function() {
                            column(
                              3,
                              offset = 0.5,
-                             br()#,
-                             # actionButton("exit", label = "Return to R and write data")
+                             br()
                            )
                          ),
                          uiOutput('brush')
                 ),
                 tabPanel(title = "multiplots",
-                         fluidRow(column(3,uiOutput('xvarUI')),
+                         fluidRow(column(3,uiOutput('xvar2UI')),
                                   column(1),
                                   column(3,
-                                         uiOutput('yvarUI')
+                                         uiOutput('yvar2UI')
                                   ),
                                   column(1),
                                   column(3,
-                                         uiOutput('CodeUI')
+                                         uiOutput('Code2UI')
                                   )
                          ),
+                         fluidRow(column(3,actionButton("updateMultiplot","update")),column(1),column(3,numericInput("plotHeight",label = "plot height in pixels",min = 500,max = 2000, value = 900, step = 50))),
                          fluidRow(
-                           plotOutput('multiplot')
+                           uiOutput('multiplotUI')
                          )
                 )
     )
