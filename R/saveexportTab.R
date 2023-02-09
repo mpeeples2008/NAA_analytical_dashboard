@@ -20,3 +20,26 @@ saveexportTab = function(){tabPanel(title = "Save & Export", icon = icon("downlo
                   ) # end sidebarLayout Save and Export
 ) # end tabPanel "Save and Export"
 }
+
+#' Save and Export Server
+#'
+#' @param input
+#' @param output
+#' @param session
+#' @param rvals
+#'
+#' @return
+#' @export
+#'
+#' @examples
+saveExportServer = function(input,output,session,rvals){
+  output$Save <- downloadHandler(
+    filename = function() {
+      input$ExportName
+    },
+    content = function(file) {
+      rio::export(dplyr::bind_cols(rvals$attrData, rvals$chemicalData),
+                  file)
+    }
+  )
+}
