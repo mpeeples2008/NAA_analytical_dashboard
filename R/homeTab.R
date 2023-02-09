@@ -1,12 +1,18 @@
-# UI elements for the Home tab
-# The home tab provides an introduction and basic overview of functionality
+
+#' UI elements for the Home tab
+#'
+#' The home tab provides an introduction and basic overview of functionality
 # In lieu of directing the user to a self-contained Help section, the 
 # Home tab will provide links to resources for assistance. These will 
 # include a blog with posts regarding functionality and updates, contact 
 # info for developers, and a link to a Google group or similar forum 
 # for Q+A's as well as FAQ's
-
-tabPanel(title = "Home", icon = icon("home"),
+#'
+#' @return
+#' @export
+#'
+#' @examples
+homeTab = function(){tabPanel(title = "Home", icon = icon("home"),
   
          
          div(id = "home", 
@@ -17,6 +23,4 @@ tabPanel(title = "Home", icon = icon("home"),
              
              )
          )
-         
-
-
+}
