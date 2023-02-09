@@ -77,7 +77,7 @@ visualizeassignTab = function() {
                                          uiOutput('Code2UI')
                                   )
                          ),
-                         fluidRow(column(3,actionButton("updateMultiplot","update")),column(1),column(3,numericInput("plotHeight",label = "plot height in pixels",min = 500,max = 2000, value = 900, step = 50))),
+                         fluidRow(column(3,actionButton("updateMultiplot","update")),column(1),column(3,numericInput("plotHeight",label = "plot height in pixels",min = 500,max = 2000, value = 900, step = 50)),column(1),column(4,actionButton('savePlot',"Save Plot"))),
                          fluidRow(
                            uiOutput('multiplotUI')
                          )
@@ -98,8 +98,9 @@ visualizeassignTab = function() {
 #'
 #' @examples
 visualizeAssignServer = function(input,output,session,rvals){
-  req(input$Code)
+
   output$sel <- renderUI({
+    req(input$Code)
     req(rvals$attrData)
     vals = rvals$attrData[[input$Code]] %>% unique %>% sort
     checkboxGroupInput("groups",
@@ -292,4 +293,29 @@ visualizeAssignServer = function(input,output,session,rvals){
     req(rvals$multiplot)
     rvals$multiplot
   })
+
+  observeEvent(input$savePlot,{
+    showModal(modalDialog(
+      title = "Save Plot",
+      textInput("plotfilename", "File name:", value = "ggplot.png"),
+      numericInput("width", "Width (inches):", value = 7),
+      numericInput("height", "Height (inches):", value = 5),
+      numericInput("res", "Resolution (dpi):", value = 300),
+      footer = tagList(
+        modalButton("Cancel"),
+        downloadButton("saveMultiPlot", "Save")
+      )
+    ))
+  })
+
+  output$saveMultiPlot <- downloadHandler(
+    filename = function() {
+      input$plotfilename
+    },
+    content = function(file) {
+      ggplot2::ggsave(filename = file, plot = rvals$multiplot,
+                      width = input$width, height = input$height, dpi = input$res)
+    }
+  )
+
 }

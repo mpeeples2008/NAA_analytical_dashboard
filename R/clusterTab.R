@@ -111,7 +111,7 @@ clusterServer = function(input,output,session,rvals){
           )
         )}
         rvals$clusterDT <-
-          tibble::as_tibble(cutree(hc,
+          tibble::as_tibble(dendextend::cutree(hc,
                                    k = input$hca.cutree.k))
         rvals$clusterDT <-
           tibble::rownames_to_column(as.data.frame(rvals$clusterDT), var = "Sample")
@@ -133,8 +133,8 @@ clusterServer = function(input,output,session,rvals){
           ),
           xlab = paste0(input$clust.dist.method, " distance")
         )}
-        rvals$clusterDT<-
-          tibble::as_tibble(cutree(hc,
+        rvals$clusterDT <-
+          tibble::as_tibble(dendextend::cutree(hc,
                                    k = input$hdca.cutree.k))
         rvals$clusterDT <-
           tibble::rownames_to_column(as.data.frame(rvals$clusterDT), var = "Sample")
@@ -337,5 +337,6 @@ clusterServer = function(input,output,session,rvals){
       dplyr::bind_cols(rvals$clusterDT %>%
                          dplyr::select(-Sample) %>%
                          dplyr::mutate_all(factor))
+    showNotification("assigned cluster")
   })
 }
