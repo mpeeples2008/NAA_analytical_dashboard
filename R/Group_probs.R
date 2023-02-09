@@ -3,13 +3,12 @@
 #'
 #' @param elements  transformed element data
 #' @param assigned group designation by sample
-#' @param grps vector of groups to evaluate
 #'
 #' @return
 #' @export
 #'
 #' @examples
-group.mem.probs <- function(elements,assigned,grps, method = "Hotellings") {
+group.mem.probs <- function(elements,assigned,method = "Hotellings") {
   # Initialize libraries
   library(ICSNP)
   library(kableExtra)
@@ -17,7 +16,7 @@ group.mem.probs <- function(elements,assigned,grps, method = "Hotellings") {
   library(mice)
   # elements = transformed element data
   # assigned = group designation by sample
-  # grps <- vector of groups to evaluate
+  grps = assigned %>% unique %>% sort
 
   if(method == "Hotellings"){
     probs <- list()
@@ -58,7 +57,7 @@ group.mem.probs <- function(elements,assigned,grps, method = "Hotellings") {
   return(probs)
 }
 
-# # read in sample data INAA_test, create attribute and element data.frames, impute missing data and transform
+# read in sample data INAA_test, create attribute and element data.frames, impute missing data and transform
 # mydat <- read.csv('inst/INAA_test.csv',header=T,row.names=1)
 # attr1 <- mydat[,c(1,3,5,7)] # pull out attributes for plotting
 # chem1 <- mydat[,c(8:21,23:40)] # pull out element data (excluing Ni)
@@ -66,10 +65,10 @@ group.mem.probs <- function(elements,assigned,grps, method = "Hotellings") {
 # chem.imp <- tidyr::complete(mice::mice(chem1,method='rf')) # impute missing data using the random forest approach
 # chem.t <- log10(chem.imp) # log-base-10 transform raw element data
 # grps <- unique(attr1$CORE)
-#
+
 # run script and view output as "kable"
 # knitr::kable(
-# group.mem.probs(chem.t,attr1$CORE,grps)
+# test2 =group.mem.probs(chem.t,attr1$CORE,grps)
 # )
 #
 #

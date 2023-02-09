@@ -9,29 +9,43 @@
 #' @examples
 clusterTab = function(){
   tabPanel(title = "Cluster", icon = icon("adjust", lib = "glyphicon"),
+           tabsetPanel(id = "clusterPanels",
+                       tabPanel(title = "Cluster",
+                                sidebarLayout(
+                                  sidebarPanel(
+                                    radioButtons("cluster.parent", "Select Clustering Method",
+                                                 choices = c("View optimal number of clusters" = "nClust",
+                                                             "Hierarchical Agglomerative Clustering" = "hca",
+                                                             "Hierarchical Divisive Clustering" = "hdca",
+                                                             "k-means" = "kmeans",
+                                                             "k-medoids" = "kmedoids"),
+                                                 selected = "nClust"),
+                                    uiOutput("cluster.options"),
+                                    uiOutput("cluster.column.text"),
+                                    uiOutput("cluster.button"),
+                                    br(),
+                                    uiOutput("cluster.assign.button")
+                                  ), # end sidebarPanel
 
-           sidebarLayout(
-             sidebarPanel(
-               radioButtons("cluster.parent", "Select Clustering Method",
-                            choices = c("View optimal number of clusters" = "nClust",
-                                        "Hierarchical Agglomerative Clustering" = "hca",
-                                        "Hierarchical Divisive Clustering" = "hdca",
-                                        "k-means" = "kmeans",
-                                        "k-medoids" = "kmedoids"),
-                            selected = "nClust"),
-               uiOutput("cluster.options"),
-               uiOutput("cluster.column.text"),
-               uiOutput("cluster.button"),
-               br(),
-               uiOutput("cluster.assign.button")
-             ), # end sidebarPanel
-
-             mainPanel(
-               plotOutput("clusterPlot"),
-               DT::dataTableOutput("clusterDT")
-  ) # end mainPanel PCA
-  ) # end sidebarLayout PCA
-) # end tabPanel "Cluster"
+                                  mainPanel(
+                                    plotOutput("clusterPlot"),
+                                    DT::dataTableOutput("clusterDT")
+                                  ) # end mainPanel PCA
+                                ) # end sidebarLayout PCA
+                       ), # end cluster panel
+                       tabPanel(title = "Group Membership",
+                                sidebarLayout(sidebarPanel(
+                                  uiOutput("membershipGroupUI"),
+                                  uiOutput("membershipGroupChoiceUI"),
+                                  selectInput("membershipMethod","Select method",choices = c("Hotellings","Mahalanobis")),
+                                  actionButton("membershipRun","Calculate"),
+                                ),
+                                mainPanel(
+                                  tableOutput('membershipTbl')
+                                ))
+                       ) # end group membership panel
+           )#end tabset panel
+  ) # end tabPanel "Cluster"
 }
 
 #' Cluster Server
@@ -112,7 +126,7 @@ clusterServer = function(input,output,session,rvals){
         )}
         rvals$clusterDT <-
           tibble::as_tibble(dendextend::cutree(hc,
-                                   k = input$hca.cutree.k))
+                                               k = input$hca.cutree.k))
         rvals$clusterDT <-
           tibble::rownames_to_column(as.data.frame(rvals$clusterDT), var = "Sample")
         colnames(rvals$clusterDT) <-
@@ -135,7 +149,7 @@ clusterServer = function(input,output,session,rvals){
         )}
         rvals$clusterDT <-
           tibble::as_tibble(dendextend::cutree(hc,
-                                   k = input$hdca.cutree.k))
+                                               k = input$hdca.cutree.k))
         rvals$clusterDT <-
           tibble::rownames_to_column(as.data.frame(rvals$clusterDT), var = "Sample")
         colnames(rvals$clusterDT) <-
@@ -339,4 +353,33 @@ clusterServer = function(input,output,session,rvals){
                          dplyr::mutate_all(factor))
     showNotification("assigned cluster")
   })
+
+  # UI Outputs for membership groups
+
+  output$membershipGroupUI = renderUI({
+    req(rvals$attrData)
+    selectInput("membershipGroup","Choose Group Column",choices = colnames(rvals$attrData)[sapply(rvals$attrData, is.factor)])
+  })
+
+  output$membershipGroupChoiceUI = renderUI({
+    req(input$membershipGroup)
+    choices = rvals$attrData %>% dplyr::distinct(!!as.name(input$membershipGroup)) %>%
+      dplyr::pull() %>%
+      sort()
+    selectInput("membershipGroupChoice","Choose Group to View",choices = choices)
+  })
+
+  observeEvent(input$membershipRun,{
+    req(input$membershipGroup)
+    showNotification("calculating membership")
+    rvals$membershipProbs = try(group.mem.probs(elements = rvals$chemicalData,assigned = rvals$attrData[[input$membershipGroup]],method = input$membershipMethod))
+    if(inherits(rvals$membershipProbs,"try-error")) showNotification(paste("Error"),rvals$membershipProbs[[1]])
+    showNotification("completed")
+  })
+
+  output$membershipTbl = renderTable({
+    rvals$membershipProbs[[input$membershipGroupChoice]] %>%
+      tibble::as_tibble()
+  })
+
 }
